@@ -1,0 +1,10 @@
+#backend/requirements.txt
+
+Django>=4.2,<6.0
+djangorestframework>=3.14
+django-cors-headers>=4.0
+Pillow>=10.0
+opencv-python>=4.8
+pygltflib>=1.15
+python-decouple>=3.8
+psycopg2-binary>=2.9

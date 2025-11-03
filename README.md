@@ -52,7 +52,7 @@ source venv/bin/activate
 
 5. **Install dependencies**
 ```bash
-pip install -r requirements.txt
+pip install -r requirement.txt
 ```
 
 6. **Create `.env` file**
