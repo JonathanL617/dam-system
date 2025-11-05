@@ -68,7 +68,7 @@ class FileUploadHandler:
             max_size_mb = max_size / (1024 * 1024)
             actual_size_mb = file_size / (1024 * 1024)
 
-            return False, asset_type, f'File too large ({actual_size_mb:.2f} MB). Maximum allowed: {max_size_mb:2.f} MB)'
+            return False, asset_type, f'File too large ({actual_size_mb:.2f} MB). Maximum allowed: {max_size_mb:.2f} MB)'
         
         return True, asset_type, ''
     

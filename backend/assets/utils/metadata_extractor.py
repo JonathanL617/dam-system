@@ -15,7 +15,7 @@ class MetadataExtractor:
                 #extract basic info
                 metadata = {
                     'width': img.width,
-                    'hieght': img.height,
+                    'height': img.height,
                     'format': img.format,
                     'mode': img.mode,
                     'file_size': os.path.getsize(file_path),
@@ -68,7 +68,7 @@ class MetadataExtractor:
                 metadata['duration_seconds'] = round(metadata['frame_count'] / metadata['fps'], 2)
                 metadata['duration_formatted'] = self._format_duration(metadata['duration_seconds'])
             
-            if metadata.get('duration_second', 0) > 0:
+            if metadata.get('duration_seconds', 0) > 0:
                 bitrate = (metadata['file_size'] * 8) / metadata['duration_seconds']
                 metadata['bitrate_kbps'] = round(bitrate / 1000, 2)
             
@@ -148,11 +148,11 @@ class MetadataExtractor:
             print(f'Error generating thumbnail: {e}')
             return False
 
-    def generate_video_thumbnail(self, fille_path: str, output_path: str, frame_time=1.0) -> bool:
+    def generate_video_thumbnail(self, file_path: str, output_path: str, frame_time=1.0) -> bool:
         try:
             import cv2
 
-            capture = cv2.VideoCapture(fille_path)
+            capture = cv2.VideoCapture(file_path)
 
             if not capture.isOpened():
                 return False
@@ -205,7 +205,7 @@ class MetadataExtractor:
         else:
             return False
 
-    def format_duration(self, seconds: float) -> str:
+    def _format_duration(self, seconds: float) -> str:
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
         sec = int(seconds % 60)
