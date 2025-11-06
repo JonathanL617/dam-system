@@ -74,8 +74,12 @@ WSGI_APPLICATION = 'dam_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'DAM',           # If your database name different please change
+        'USER': 'postgres',
+        'PASSWORD': '1234', # Use your own PostgreSQL password
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
