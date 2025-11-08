@@ -6,7 +6,7 @@ CREATE TABLE users (
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('admin', 'editor', 'user')) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('admin', 'editor', 'viewer)) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE
