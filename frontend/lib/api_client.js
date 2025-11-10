@@ -11,3 +11,15 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export const login = (data) => api.post("/auth/login", data);
+export const register = (data) => api.post("/auth/register", data);
+
+export const uploadAsset = (formData) => api.post("/assets/upload", formData);
+export const getAssets = () => api.get("/assets");
+export const getAssetById = (id) => api.get(`/assets/${id}`);
+export const deleteAsset = (id) => api.delete(`/assets/${id}`);
+
+export const updateMetadata = (id, data) => api.put(`/assets/${id}/metadata`, data);
+export const searchAssets = (query) => api.get(`/assets/search?q=${query}`);
+
