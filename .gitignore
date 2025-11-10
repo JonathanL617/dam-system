@@ -60,6 +60,7 @@ backend/.env.production
 backend/*.sql
 backend/*.dump
 backend/data_backup.json
+*.sqlite3
 
 
 # ============================================
