@@ -560,7 +560,7 @@ class IntegrationTestCase(TestCase):
         tag_results = self.search.search_by_tags(['integration'])
         self.assertEqual(len(tag_results), 1)
         
-        print("\n✅ Complete workflow test passed!")
+        print("\nComplete workflow test passed!")
         print(f"   Created asset: {asset['name']}")
         print(f"   File: {asset['filename']}")
         print(f"   Size: {metadata['width']}x{metadata['height']}")
