@@ -39,4 +39,48 @@ export default function LoginPage() {
       });
     }
   };
+
+    return (
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      minH="100vh"
+      bgGradient="linear(to-r, #74ebd5, #acb6e5)"
+    >
+      <VStack
+        bg="white"
+        p={10}
+        borderRadius="2xl"
+        boxShadow="lg"
+        spacing={5}
+        w="sm"
+      >
+        <Heading size="lg" color="#3498db">
+          Digital Asset Management
+        </Heading>
+        <Input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <Input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button
+          colorScheme="blue"
+          w="full"
+          borderRadius="xl"
+          onClick={handleLogin}
+        >
+          Login
+        </Button>
+      </VStack>
+    </Box>
+  );
+}
+
  
