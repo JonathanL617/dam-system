@@ -23,3 +23,4 @@ export const deleteAsset = (id) => api.delete(`/assets/${id}`);
 export const updateMetadata = (id, data) => api.put(`/assets/${id}/metadata`, data);
 export const searchAssets = (query) => api.get(`/assets/search?q=${query}`);
 
+export default api;
