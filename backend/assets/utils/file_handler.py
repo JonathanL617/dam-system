@@ -78,7 +78,7 @@ class FileUploadHandler:
         name, type = os.path.splitext(original_filename)
 
         #create timestamp
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
 
         #create hash from original filename
         hash_obj = hashlib.md5(original_filename.encode())
