@@ -155,6 +155,33 @@ export default function DashboardPage() {
     }
   }
 
+        {(role === "Admin" || role === "Editor") && (
+        <Box
+          mb={8}
+          p={6}
+          border="2px dashed #3498db"
+          borderRadius="2xl"
+          textAlign="center"
+          bg="whiteAlpha.800"
+          _hover={{ bg: "whiteAlpha.900" }}
+        >
+          <Text mb={3} fontWeight="semibold" color="gray.700">
+            Drag & Drop files here or click to upload
+          </Text>
+          <input
+            type="file"
+            onChange={handleUpload}
+            style={{ opacity: 0, position: "absolute", width: "100%", height: "100%", cursor: "pointer" }}
+          />
+          {uploading && (
+            <Text mt={2} color="blue.500" fontSize="sm">
+              Uploading...
+            </Text>
+          )}
+        </Box>
+      )}
+
+
 
 
 
