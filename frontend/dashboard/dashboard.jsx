@@ -122,5 +122,39 @@ export default function DashboardPage() {
         </Box>
       )}
 
+        const [uploading, setUploading] = useState(false);
+
+          async function handleUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      // Optionally fetch new assets after upload
+      const newAsset = await response.json();
+      setAssets((prev) => [...prev, newAsset]);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+
 
 
