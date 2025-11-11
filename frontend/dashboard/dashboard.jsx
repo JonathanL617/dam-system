@@ -181,6 +181,9 @@ export default function DashboardPage() {
         </Box>
       )}
 
+        const [searchQuery, setSearchQuery] = useState("");
+
+
 
 
 
