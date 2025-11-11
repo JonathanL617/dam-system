@@ -113,3 +113,19 @@ npm run dev
 
 Frontend should be running at: http://localhost:3000/
 
+## Database Setup
+
+1. **Migration**
+```bash
+cd ../backend
+```
+
+2. **Make Migrations**
+```
+python manage.py makemigrations dam_assets
+```
+
+3. **Migrate**
+```
+python manage.py migrate
+```
