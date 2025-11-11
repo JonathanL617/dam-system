@@ -104,4 +104,23 @@ export default function DashboardPage() {
     fetchAssets();
   }, []);
 
+        <Text mb={4} fontSize="md" color="gray.700">
+        Logged in as: <b>{role || "Unknown"}</b>
+      </Text>
+
+      {role === "Admin" && (
+        <Box mb={6} p={4} bg="whiteAlpha.800" borderRadius="xl" boxShadow="md">
+          <Heading size="sm" mb={2}>Admin Controls</Heading>
+          <Text color="gray.600">You have full access to upload, delete, and manage assets.</Text>
+        </Box>
+      )}
+
+      {role === "Editor" && (
+        <Box mb={6} p={4} bg="whiteAlpha.800" borderRadius="xl" boxShadow="md">
+          <Heading size="sm" mb={2}>Editor Tools</Heading>
+          <Text color="gray.600">You can upload and edit assets.</Text>
+        </Box>
+      )}
+
+
 
