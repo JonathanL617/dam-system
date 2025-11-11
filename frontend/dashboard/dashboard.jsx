@@ -74,3 +74,34 @@ export default function DashboardPage() {
   );
 }
 
+  useEffect(() => {
+    async function fetchAssets() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        // Redirect to login if not logged in
+        window.location.href = "/login";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/assets/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch assets");
+        const data = await response.json();
+        setAssets(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAssets();
+  }, []);
+
+
