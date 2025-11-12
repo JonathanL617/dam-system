@@ -264,6 +264,19 @@ export default function DashboardPage() {
                 setIsOpen(false);
             };
 
+            <GridItem
+            key={asset.id}
+            bg="white"
+            borderRadius="2xl"
+            boxShadow="md"
+            p={4}
+            cursor="pointer"
+            transition="0.3s"
+            _hover={{ boxShadow: "xl", transform: "translateY(-4px)" }}
+            onClick={() => openModal(asset)}
+            >
+
+
 
 
 
