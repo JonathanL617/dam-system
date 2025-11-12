@@ -381,6 +381,43 @@ export default function DashboardPage() {
             </select>
         </Box>
 
+          <Box mt={6} display="flex" justifyContent="center" alignItems="center">
+    <button
+      onClick={() => handlePageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      style={{
+        padding: "6px 10px",
+        borderRadius: "8px",
+        marginRight: "8px",
+        background: currentPage === 1 ? "#ccc" : "#3498db",
+        color: "white",
+        border: "none",
+        cursor: currentPage === 1 ? "not-allowed" : "pointer",
+      }}
+    >
+      Prev
+    </button>
+    <Text mx={2} fontSize="sm">
+      Page {currentPage} of {totalPages}
+    </Text>
+    <button
+      onClick={() => handlePageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      style={{
+        padding: "6px 10px",
+        borderRadius: "8px",
+        marginLeft: "8px",
+        background: currentPage === totalPages ? "#ccc" : "#3498db",
+        color: "white",
+        border: "none",
+        cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+      }}
+    >
+      Next
+    </button>
+  </Box>
+
+
 
 
 
