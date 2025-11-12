@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {Box, Button, FormControl, FormLabel, Input, VStack, Heading, Text, Alert, AlertIcon, Container} from '@chakra-ui/react';
+import { Box, Button, Input, VStack, Heading, Text, Container, Stack } from '@chakra-ui/react';
 import { loginUser } from '@/lib/api_client';
 
 export default function LoginPage() {
@@ -22,21 +22,19 @@ export default function LoginPage() {
     try {
       const response = await loginUser(email, password);
       
-      // Store token and user info
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('role', response.role);
-      localStorage.setItem('username', response.username);
-
-      localStorage.setItem('user', JSON.stringify({
-        username: response.username,
-        email: response.email || response.username,
-        role: response.role
-      }));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('role', response.role);
+        localStorage.setItem('username', response.username);
+        localStorage.setItem('user', JSON.stringify({
+          username: response.username,
+          email: response.email || response.username,
+          role: response.role
+        }));
+      }
       
-      // Show success message
       setSuccess(`Welcome back, ${response.username}!`);
       
-      // Redirect to dashboard after a short delay
       setTimeout(() => {
         router.push('/dashboard');
       }, 500);
@@ -58,7 +56,7 @@ export default function LoginPage() {
           borderRadius="lg" 
           boxShadow="md"
         >
-          <VStack spacing={6} align="stretch">
+          <VStack gap={6} align="stretch">
             <Box textAlign="center">
               <Heading size="lg" mb={2}>
                 DAM System Login
@@ -69,33 +67,51 @@ export default function LoginPage() {
             </Box>
 
             {success && (
-              <Alert status="success">
-                <AlertIcon />
-                {success}
-              </Alert>
+              <Box p={3} bg="green.100" borderRadius="md" color="green.800">
+                <Text fontWeight="medium">{success}</Text>
+              </Box>
             )}
 
             {error && (
-              <Alert status="error">
-                <AlertIcon />
-                {error}
-              </Alert>
+              <Box p={3} bg="red.100" borderRadius="md" color="red.800">
+                <Text fontWeight="medium">{error}</Text>
+              </Box>
             )}
 
             <form onSubmit={handleLogin}>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
-                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading}/>
-                </FormControl>
+              <VStack gap={4}>
+                <Box width="full">
+                  <Text fontWeight="medium" mb={2}>Email *</Text>
+                  <Input 
+                    type="email" 
+                    placeholder="your@email.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    disabled={loading}
+                    required
+                  />
+                </Box>
 
-                <FormControl isRequired>
-                  <FormLabel>Password</FormLabel>
-                  <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading}/>
-                </FormControl>
+                <Box width="full">
+                  <Text fontWeight="medium" mb={2}>Password *</Text>
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    disabled={loading}
+                    required
+                  />
+                </Box>
 
-                <Button type="submit" colorScheme="blue" width="full" size="lg" isLoading={loading} loadingText="Signing in...">
-                  Sign In
+                <Button 
+                  type="submit" 
+                  colorPalette="blue" 
+                  width="full" 
+                  size="lg" 
+                  loading={loading}
+                >
+                  {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </VStack>
             </form>
