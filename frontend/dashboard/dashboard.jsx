@@ -363,6 +363,25 @@ export default function DashboardPage() {
             if (page >= 1 && page <= totalPages) setCurrentPage(page);
         };
 
+        <Box mb={4} display="flex" justifyContent="flex-end" alignItems="center">
+            <Text fontSize="sm" mr={2}>Sort by:</Text>
+            <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+                padding: "6px 10px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+                outline: "none",
+                cursor: "pointer",
+            }}
+            >
+            <option value="created_at">Upload Date</option>
+            <option value="name">Name</option>
+            </select>
+        </Box>
+
+
         
 
 
