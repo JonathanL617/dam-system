@@ -276,6 +276,57 @@ export default function DashboardPage() {
             onClick={() => openModal(asset)}
             >
 
+            <Modal isOpen={isOpen} onClose={closeModal} size="4xl" isCentered>
+            <ModalOverlay />
+            <ModalContent borderRadius="2xl" p={4}>
+            <ModalHeader>{selectedAsset?.name}</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody display="flex" flexDir="column" alignItems="center">
+                {selectedAsset && selectedAsset.preview_url && (
+                <>
+                    {selectedAsset.name.match(/\.(jpg|jpeg|png|gif)$/i) && (
+                    <Image
+                        src={selectedAsset.preview_url}
+                        alt={selectedAsset.name}
+                        maxH="60vh"
+                        borderRadius="lg"
+                        mb={3}
+                    />
+                    )}
+
+                    {selectedAsset.name.match(/\.(mp4|webm|ogg)$/i) && (
+                    <video
+                        src={selectedAsset.preview_url}
+                        controls
+                        style={{ maxHeight: "60vh", borderRadius: "12px", marginBottom: "12px" }}
+                    />
+                    )}
+
+                    {selectedAsset.name.match(/\.(pdf)$/i) && (
+                    <iframe
+                        src={selectedAsset.preview_url}
+                        width="100%"
+                        height="500px"
+                        style={{ borderRadius: "12px" }}
+                    ></iframe>
+                    )}
+                </>
+                )}
+                <Text fontSize="sm" color="gray.500" mt={2}>
+                Uploaded on: {new Date(selectedAsset?.created_at).toLocaleDateString()}
+                </Text>
+                <Box mt={3}>
+                {selectedAsset?.tags?.map((tag, i) => (
+                    <Tag key={i} size="sm" colorScheme="blue" mr={1}>
+                    {tag}
+                    </Tag>
+                ))}
+                </Box>
+            </ModalBody>
+            </ModalContent>
+        </Modal>
+
+
 
 
 
