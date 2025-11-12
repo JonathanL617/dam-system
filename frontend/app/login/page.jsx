@@ -6,7 +6,7 @@ import { Box, Button, Input, VStack, Heading, Text, Container, Stack } from '@ch
 import { loginUser } from '@/lib/api_client';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await loginUser(email, password);
+      const response = await loginUser(identifier, password);
       
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
@@ -28,7 +28,7 @@ export default function LoginPage() {
         localStorage.setItem('username', response.username);
         localStorage.setItem('user', JSON.stringify({
           username: response.username,
-          email: response.email || response.username,
+          email: response.email,
           role: response.role
         }));
       }
@@ -81,12 +81,12 @@ export default function LoginPage() {
             <form onSubmit={handleLogin}>
               <VStack gap={4}>
                 <Box width="full">
-                  <Text fontWeight="medium" mb={2}>Email *</Text>
+                  <Text fontWeight="medium" mb={2}>Username or Email *</Text>
                   <Input 
-                    type="email" 
-                    placeholder="your@email.com" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                    type="text" 
+                    placeholder="your@email.com / username" 
+                    value={identifier} 
+                    onChange={(e) => setIdentifier(e.target.value)} 
                     disabled={loading}
                     required
                   />
@@ -118,7 +118,7 @@ export default function LoginPage() {
 
             <Text fontSize="sm" color="gray.600" textAlign="center">
               Demo credentials:<br />
-              <strong>Admin:</strong> admin@example.com / admin123<br />
+              <strong>Admin:</strong> admin or admin@example.com / admin123<br />
               <strong>Editor:</strong> editor@example.com / editor123<br />
               <strong>Viewer:</strong> viewer@example.com / viewer123
             </Text>

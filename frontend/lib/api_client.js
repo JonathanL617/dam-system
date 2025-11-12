@@ -19,8 +19,8 @@ export const api = async (endpoint, options = {}) => {
   }
   
   if (token) {
-    headers['Authorization'] = `Token ${token}`;
-  }
+    headers['Authorization'] = `Token ${token}`; 
+}
   
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
@@ -36,10 +36,10 @@ export const api = async (endpoint, options = {}) => {
 
 //auth
 
-export const loginUser = (email, password) => 
-  api('/auth/login/', {
+export const loginUser = (identifier, password) => 
+  api('/login/', {
     method: 'POST',
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ identifier, password })
   });
 
 export const logoutUser = () => {

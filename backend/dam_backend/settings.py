@@ -39,11 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'assets.apps.AssetsConfig',
+    
 ]
 
 #additional 
 INSTALLED_APPS += [
     'rest_framework',
+    'rest_framework.authtoken',
     'drf_spectacular',
     'corsheaders',
 ]
@@ -60,7 +62,9 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
 }
 
 # Allow Next.js (localhost:3000)
