@@ -348,6 +348,20 @@ export default function DashboardPage() {
         const [itemsPerPage] = useState(6); // number of assets per page
         const [sortBy, setSortBy] = useState("created_at"); // default sort
 
+        const sortedAssets = [...assets].sort((a, b) => {
+           if (sortBy === "name") return a.name.localeCompare(b.name);
+           if (sortBy === "created_at") return new Date(b.created_at) - new Date(a.created_at);
+           return 0;
+        });
+
+        const totalPages = Math.ceil(sortedAssets.length / itemsPerPage);
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        const currentAssets = sortedAssets.slice(indexOfFirstItem, indexOfLastItem);
+
+        const handlePageChange = (page) => {
+            if (page >= 1 && page <= totalPages) setCurrentPage(page);
+        };
 
         
 
