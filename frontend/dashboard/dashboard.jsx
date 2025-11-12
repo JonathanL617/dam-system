@@ -200,6 +200,8 @@ export default function DashboardPage() {
         />
       </Box>
 
+        const [selectedAsset, setSelectedAsset] = useState(null);
+        const [isOpen, setIsOpen] = useState(false);
                 {assets
             .filter((asset) => {
               const query = searchQuery.toLowerCase();
@@ -248,6 +250,19 @@ export default function DashboardPage() {
                 </Box>
               </GridItem>
             ))}
+
+          const [selectedAsset, setSelectedAsset] = useState(null);
+            const [isOpen, setIsOpen] = useState(false);
+
+            const openModal = (asset) => {
+                setSelectedAsset(asset);
+                setIsOpen(true);
+            };
+
+            const closeModal = () => {
+                setSelectedAsset(null);
+                setIsOpen(false);
+            };
 
 
 
