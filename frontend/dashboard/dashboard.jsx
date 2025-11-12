@@ -2,6 +2,24 @@
 
 import { useEEfect, useState } from "react";
 import { Box, Heading, Text, Spinner, Grid, GridItem, Image, Tag} from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Text,
+  Spinner,
+  Grid,
+  GridItem,
+  Image,
+  Tag,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody
+} from "@chakra-ui/react";
+
+
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
@@ -325,6 +343,8 @@ export default function DashboardPage() {
             </ModalBody>
             </ModalContent>
         </Modal>
+
+        
 
 
 
