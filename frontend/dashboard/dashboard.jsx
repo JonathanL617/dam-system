@@ -200,6 +200,56 @@ export default function DashboardPage() {
         />
       </Box>
 
+                {assets
+            .filter((asset) => {
+              const query = searchQuery.toLowerCase();
+              return (
+                asset.name.toLowerCase().includes(query) ||
+                (asset.tags && asset.tags.some((tag) => tag.toLowerCase().includes(query)))
+              );
+            })
+            .map((asset) => (
+              <GridItem
+                key={asset.id}
+                bg="white"
+                borderRadius="2xl"
+                boxShadow="md"
+                p={4}
+                transition="0.3s"
+                _hover={{ boxShadow: "xl" }}
+              >
+                {asset.preview_url ? (
+                  <Image src={asset.preview_url} alt={asset.name} borderRadius="xl" mb={3} />
+                ) : (
+                  <Box
+                    bg="gray.100"
+                    h="150px"
+                    borderRadius="xl"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Text color="gray.500">No Preview</Text>
+                  </Box>
+                )}
+                <Text fontWeight="bold" color="gray.800">
+                  {asset.name}
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  {new Date(asset.created_at).toLocaleDateString()}
+                </Text>
+                <Box mt={2}>
+                  {asset.tags &&
+                    asset.tags.map((tag, i) => (
+                      <Tag key={i} size="sm" colorScheme="blue" mr={1}>
+                        {tag}
+                      </Tag>
+                    ))}
+                </Box>
+              </GridItem>
+            ))}
+
+
 
 
 
