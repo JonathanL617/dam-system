@@ -344,6 +344,11 @@ export default function DashboardPage() {
             </ModalContent>
         </Modal>
 
+        const [currentPage, setCurrentPage] = useState(1);
+        const [itemsPerPage] = useState(6); // number of assets per page
+        const [sortBy, setSortBy] = useState("created_at"); // default sort
+
+
         
 
 
