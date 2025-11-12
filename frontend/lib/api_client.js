@@ -1,26 +1,36 @@
-import axios from "axios";
+const BASE_URL = "http://127.0.0.1:8000"; 
 
-const api = axios.create({
-    baseURL: ProcessingInstruction.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
-});
+export async function login(username, password) {
+  const res = await fetch(`${BASE_URL}/api/login/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  if (!res.ok) throw new Error("Login failed");
+  return await res.json();
+}
 
-export const login = (data) => api.post("/auth/login", data);
-export const register = (data) => api.post("/auth/register", data);
+export async function fetchAssets(token) {
+  const res = await fetch(`${BASE_URL}/api/assets/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-export const uploadAsset = (formData) => api.post("/assets/upload", formData);
-export const getAssets = () => api.get("/assets");
-export const getAssetById = (id) => api.get(`/assets/${id}`);
-export const deleteAsset = (id) => api.delete(`/assets/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch assets");
+  return await res.json();
+}
 
-export const updateMetadata = (id, data) => api.put(`/assets/${id}/metadata`, data);
-export const searchAssets = (query) => api.get(`/assets/search?q=${query}`);
+export async function uploadAsset(formData, token) {
+  const res = await fetch(`${BASE_URL}/api/assets/upload/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
 
-export default api;
+  if (!res.ok) throw new Error("Upload failed");
+  return await res.json();
+}
