@@ -68,7 +68,7 @@ export default function DashboardPage() {
         <Text color="gray.600" fontSize="lg">No assets found. Upload some to get started!</Text>
       ) : (
         <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={6}>
-          {assets.map((asset) => (
+          {currentAssets.map((asset) => (
             <GridItem key={asset.id} bg="white" borderRadius="2xl" boxShadow="md" p={4} transition="0.3s" _hover={{ boxShadow: "xl" }}>
               {asset.preview_url ? (
                 <Image src={asset.preview_url} alt={asset.name} borderRadius="xl" mb={3} />
@@ -380,6 +380,8 @@ export default function DashboardPage() {
             <option value="name">Name</option>
             </select>
         </Box>
+
+
 
 
         
