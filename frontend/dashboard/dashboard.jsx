@@ -183,6 +183,23 @@ export default function DashboardPage() {
 
         const [searchQuery, setSearchQuery] = useState("");
 
+              <Box mb={6}>
+        <input
+          type="text"
+          placeholder="Search by name or tag..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "1px solid #ccc",
+            fontSize: "16px",
+            outline: "none",
+          }}
+        />
+      </Box>
+
 
 
 
