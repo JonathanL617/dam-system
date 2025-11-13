@@ -73,7 +73,7 @@ export default function DashboardPage() {
       </Box>
     );
   }
-  
+
     async function handleUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -94,6 +94,27 @@ export default function DashboardPage() {
   return (
     <Box minH="100vh" p={8} bgGradient="linear(to-r, #74ebd5, #acb6e5)">
       <Heading mb={6} color="gray.800" fontFamily="Poppins">📁 Digital Asset Dashboard</Heading>
+
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="md">Digital Asset Management</Heading>
+
+        <Button
+          as="label"
+          colorScheme="blue"
+          cursor="pointer"
+          borderRadius="xl"
+          shadow="md"
+        >
+          Upload File
+          <Input
+            type="file"
+            hidden
+            accept="image/*,video/*,application/pdf"
+            onChange={handleUpload}
+          />
+        </Button>
+      </Flex>
+
 
       {assets.length === 0 ? (
         <Text color="gray.600" fontSize="lg">No assets found. Upload some to get started!</Text>
