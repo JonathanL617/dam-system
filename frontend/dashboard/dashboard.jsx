@@ -30,10 +30,20 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
     async function fetchAssets() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+
       try {
-        const response = await fetch(`${API_BASE_URL}/api/assets/`);
+        const response = await fetch(`${API_BASE_URL}/api/assets/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (!response.ok) throw new Error("Failed to fetch assets");
         const data = await response.json();
         setAssets(data);
@@ -43,8 +53,10 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
+
     fetchAssets();
   }, []);
+
 
     if (loading) {
     return (
