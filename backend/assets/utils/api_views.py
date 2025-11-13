@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from .models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+from ..models import User
+from rest_framework.authtoken.models import Token
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 # -----------------------------
 # Custom Admin Permission
@@ -26,10 +27,7 @@ def create_initial_admin():
             password_hash=make_password('Admin123'),  # hash it
             role='admin'
         )
-        print("Initial admin created: username='admin', password='Admin123!'")
-
-# Call it once when the server starts
-create_initial_admin()
+        print("Initial admin created: username='admin', password='Admin123'")
 
 # -----------------------------
 # REGISTER
@@ -72,31 +70,35 @@ def register_user(request):
 @api_view(['POST'])
 def login_user(request):
     data = request.data
-    username = data.get('username')
+    identifier = data.get('identifier')
     password = data.get('password')
 
+    if not identifier or not password:
+        return Response({'success': False, 'error': 'Username and password required'}, status=400)
+    
     try:
-        user = User.objects.get(username=username)
+        user = User.objects.get(Q(username = identifier) | Q(email = identifier))
+
         if check_password(password, user.password_hash):
             # Update last login
             user.last_login = timezone.now()
             user.save()
 
-            # Generate JWT
-            refresh = RefreshToken.for_user(user)
-            refresh['role'] = user.role  # Add role to token
+            # Create or get DRF token
+            token, created = Token.objects.get_or_create(user=user)
 
             return Response({
                 'success': True,
                 'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
                 'role': user.role,
-                'access': str(refresh.access_token),
-                'refresh': str(refresh)
+                'token': token.key  # ← DRF Token
             })
         else:
-            return Response({'success': False, 'error': 'Invalid password'})
+            return Response({'success': False, 'error': 'Invalid password'}, status=400)
     except User.DoesNotExist:
-        return Response({'success': False, 'error': 'User not found'})
+        return Response({'success': False, 'error': 'User not found'}, status=400)
 
 # -----------------------------
 # ADMIN: LIST USERS
