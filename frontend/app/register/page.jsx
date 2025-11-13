@@ -2,46 +2,49 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Button, Input, VStack, Heading, Text, Container, Stack } from '@chakra-ui/react';
-import { loginUser } from '@/lib/api_client';
+import { Box, Button, Input, VStack, Heading, Text, Container } from '@chakra-ui/react';
+import { registerUser } from '@/lib/api_client';
 
-export default function LoginPage() {
-  const [identifier, setIdentifier] = useState('');
+export default function RegisterPage() {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    // Validation
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await loginUser(identifier, password);
+      const response = await registerUser(username, email, password);
       
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('role', response.role);
-        localStorage.setItem('username', response.username);
-        localStorage.setItem('user', JSON.stringify({
-          username: response.username,
-          email: response.email,
-          role: response.role
-        }));
-      }
-      
-      setSuccess(`Welcome back, ${response.username}!`);
+      setSuccess('Account created successfully! Redirecting to login...');
       
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 500);
+        router.push('/login');
+      }, 2000);
       
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
-      console.error('Login error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -59,10 +62,10 @@ export default function LoginPage() {
           <VStack gap={6} align="stretch">
             <Box textAlign="center">
               <Heading size="lg" mb={2}>
-                DAM System Login
+                Create Account
               </Heading>
               <Text color="gray.600">
-                Sign in to manage your digital assets
+                Sign up for DAM System
               </Text>
             </Box>
 
@@ -78,15 +81,27 @@ export default function LoginPage() {
               </Box>
             )}
 
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleRegister}>
               <VStack gap={4}>
                 <Box width="full">
-                  <Text fontWeight="medium" mb={2}>Username or Email *</Text>
+                  <Text fontWeight="medium" mb={2}>Username *</Text>
                   <Input 
                     type="text" 
-                    placeholder="your@email.com / username" 
-                    value={identifier} 
-                    onChange={(e) => setIdentifier(e.target.value)} 
+                    placeholder="johndoe" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                    disabled={loading}
+                    required
+                  />
+                </Box>
+
+                <Box width="full">
+                  <Text fontWeight="medium" mb={2}>Email *</Text>
+                  <Input 
+                    type="email" 
+                    placeholder="your@email.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
                     disabled={loading}
                     required
                   />
@@ -101,6 +116,22 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)} 
                     disabled={loading}
                     required
+                    minLength={8}
+                  />
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Must be at least 8 characters
+                  </Text>
+                </Box>
+
+                <Box width="full">
+                  <Text fontWeight="medium" mb={2}>Confirm Password *</Text>
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                    disabled={loading}
+                    required
                   />
                 </Box>
 
@@ -111,31 +142,31 @@ export default function LoginPage() {
                   size="lg" 
                   loading={loading}
                 >
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? 'Creating account...' : 'Create Account'}
                 </Button>
               </VStack>
             </form>
 
-            <Text fontSize="sm" color="gray.600" textAlign="center">
-              Demo credentials:<br />
-              <strong>Admin:</strong> admin or admin@example.com / Admin123<br />
-              <strong>Editor:</strong> editor@example.com / editor123<br />
-              <strong>Viewer:</strong> viewer@example.com / viewer123
-            </Text>
-
             <Box textAlign="center" pt={2} borderTop="1px solid" borderColor="gray.200">
               <Text fontSize="sm" color="gray.600">
-                Don't have an account?{' '}
+                Already have an account?{' '}
                 <Text 
                   as="span" 
                   color="blue.600" 
                   fontWeight="medium" 
                   cursor="pointer"
                   _hover={{ textDecoration: 'underline' }}
-                  onClick={() => router.push('/register')}
+                  onClick={() => router.push('/login')}
                 >
-                  Create one here
+                  Sign in here
                 </Text>
+              </Text>
+            </Box>
+
+            <Box bg="blue.50" p={3} borderRadius="md">
+              <Text fontSize="xs" color="blue.800">
+                <strong>Note:</strong> New accounts are created with "Viewer" role by default. 
+                Contact an admin to upgrade your permissions.
               </Text>
             </Box>
           </VStack>

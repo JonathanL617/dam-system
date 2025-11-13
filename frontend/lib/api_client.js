@@ -20,7 +20,7 @@ export const api = async (endpoint, options = {}) => {
   
   if (token) {
     headers['Authorization'] = `Token ${token}`; 
-}
+  }
   
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
@@ -35,11 +35,20 @@ export const api = async (endpoint, options = {}) => {
 };
 
 //auth
+export const registerUser = (username, email, password) =>
+  api('/auth/register/', {
+    method: 'POST',
+    body: JSON.stringify({ username, email, password })
+  });
 
 export const loginUser = (identifier, password) => 
-  api('/login/', {
+  api('/auth/login/', {
     method: 'POST',
-    body: JSON.stringify({ identifier, password })
+    body: JSON.stringify({ 
+      username: identifier,
+      email: identifier,
+      password
+    })
   });
 
 export const logoutUser = () => {

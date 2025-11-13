@@ -195,3 +195,22 @@ class ActivityLog(models.Model):
         user_str = self.user.username if self.user else 'Unknown'
         asset_str = self.asset_group.name if self.asset_group else 'N/A'
         return f"{user_str} - {self.action} - {asset_str} at {self.timestamp}"
+    
+class AuthToken(models.Model):
+    """
+    Custom authentication token for users
+    """
+    key = models.CharField(max_length=40, primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auth_tokens')
+    created = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'auth_tokens'
+    
+    def __str__(self):
+        return f"Token for {self.user.username}"
+    
+    @staticmethod
+    def generate_key():
+        import secrets
+        return secrets.token_hex(20)

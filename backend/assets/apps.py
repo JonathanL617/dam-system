@@ -8,7 +8,7 @@ class AssetsConfig(AppConfig):
 
     def ready(self):
         # Only run when the app is fully loaded
-        from assets.utils.api_views import create_initial_admin
+        from assets.api_views import create_initial_admin
 
         try:
             create_initial_admin()

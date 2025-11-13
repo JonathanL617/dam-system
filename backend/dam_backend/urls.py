@@ -15,12 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+# dam_backend/urls.py
 from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView  # needed for redirect
+from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
+from assets import api_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', include('users.urls')),
-    path('', RedirectView.as_view(url='/users/login/', permanent=False)),  # redirect root to login
+    
+    # Auth endpoints
+    path('api/auth/register/', api_views.register_user, name='register'),
+    path('api/auth/login/', api_views.login_user, name='login'),
+    path('api/auth/profile/', api_views.user_dashboard, name='profile'),
+    
+    # Admin endpoints
+    path('api/admin/users/', api_views.list_users, name='list_users'),
+    path('api/admin/users/<int:user_id>/', api_views.user_detail, name='user_detail'),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
