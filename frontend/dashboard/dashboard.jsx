@@ -73,6 +73,23 @@ export default function DashboardPage() {
       </Box>
     );
   }
+  
+    async function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const uploaded = await uploadAsset(formData);
+        setAssets(prev => [...prev, uploaded]);
+      } catch (err) {
+        console.error("Upload failed:", err);
+        alert("Upload failed. Please try again.");
+      }
+    }
+
 
   return (
     <Box minH="100vh" p={8} bgGradient="linear(to-r, #74ebd5, #acb6e5)">
