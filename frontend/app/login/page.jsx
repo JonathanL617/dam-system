@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {Box, Button, FormControl, FormLabel, Input, VStack, Heading, Text, Alert, AlertIcon, Container} from '@chakra-ui/react';
-import { loginUser } from '@/lib/api_client';
+import { loginUser } from 'app/lib/api_client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
