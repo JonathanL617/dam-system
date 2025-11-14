@@ -1,13 +1,14 @@
 # assets/api_views.py
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
-from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
-from rest_framework.authtoken.models import Token
+from rest_framework.permissions import BasePermission, AllowAny
+from rest_framework.authentication import BaseAuthentication
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from assets.models import User
+from assets.models import User, AuthToken
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from rest_framework import exceptions
 
 # -----------------------------
 # Custom Admin Permission
@@ -15,6 +16,21 @@ from django.core.exceptions import ValidationError
 class IsCustomAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user and hasattr(request.user, 'role') and request.user.role == 'admin'
+
+# -----------------------------
+# Custom AuthToken Authentication
+# -----------------------------
+class AuthTokenAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Token '):
+            return None
+        token_key = auth_header.replace('Token ', '')
+        try:
+            token = AuthToken.objects.get(key=token_key)
+        except AuthToken.DoesNotExist:
+            raise exceptions.AuthenticationFailed('Invalid token')
+        return (token.user, token)
 
 # -----------------------------
 # CREATE INITIAL ADMIN (run once)
@@ -28,8 +44,6 @@ def create_initial_admin():
             role='admin'
         )
         print("✅ Initial admin created: username='admin', password='Admin123'")
-
-
 
 # -----------------------------
 # REGISTER
@@ -80,47 +94,34 @@ def login_user(request):
     if not username or not password:
         return Response({'error': 'Username and password are required'}, status=400)
 
-    try:
-        from assets.models import AuthToken
-        
-        # Try to find user by username or email
-        user = User.objects.filter(username=username).first() or User.objects.filter(email=username).first()
-        
-        if not user:
-            return Response({'error': 'Invalid credentials'}, status=400)
-            
-        if not check_password(password, user.password_hash):
-            return Response({'error': 'Invalid credentials'}, status=400)
-        
-        # Update last login
-        user.last_login = timezone.now()
-        user.save()
+    user = User.objects.filter(username=username).first() or User.objects.filter(email=username).first()
+    if not user or not check_password(password, user.password_hash):
+        return Response({'error': 'Invalid credentials'}, status=400)
 
-        # Get or create token
-        token = AuthToken.objects.filter(user=user).first()
-        if not token:
-            token = AuthToken.objects.create(
-                key=AuthToken.generate_key(),
-                user=user
-            )
-        
-        return Response({
-            'token': token.key,
-            'username': user.username,
-            'email': user.email,
-            'role': user.role
-        })
-        
-    except Exception as e:
-        print(f"Login error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return Response({'error': 'Server error'}, status=500)
+    # Update last login
+    user.last_login = timezone.now()
+    user.save()
+
+    # Get or create token
+    token = AuthToken.objects.filter(user=user).first()
+    if not token:
+        token = AuthToken.objects.create(
+            key=AuthToken.generate_key(),
+            user=user
+        )
+
+    return Response({
+        'token': token.key,
+        'username': user.username,
+        'email': user.email,
+        'role': user.role
+    })
 
 # -----------------------------
 # ADMIN: LIST USERS
 # -----------------------------
 @api_view(['GET'])
+@authentication_classes([AuthTokenAuthentication])
 @permission_classes([IsCustomAdmin])
 def list_users(request):
     users = User.objects.all().values('id', 'username', 'email', 'role', 'last_login', 'created_at', 'is_active')
@@ -130,6 +131,7 @@ def list_users(request):
 # ADMIN: EDIT ROLE / RESET PASSWORD / DELETE USER
 # -----------------------------
 @api_view(['PUT', 'DELETE'])
+@authentication_classes([AuthTokenAuthentication])
 @permission_classes([IsCustomAdmin])
 def user_detail(request, user_id):
     try:
@@ -158,21 +160,14 @@ def user_detail(request, user_id):
 # USER DASHBOARD / PROFILE
 # -----------------------------
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@authentication_classes([AuthTokenAuthentication])
 def user_dashboard(request):
-    # Get user from token
-    try:
-        token_key = request.headers.get('Authorization', '').replace('Token ', '')
-        token = Token.objects.get(key=token_key)
-        user = User.objects.get(id=token.user_id)
-        
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'role': user.role,
-            'is_active': user.is_active,
-            'last_login': user.last_login
-        })
-    except (Token.DoesNotExist, User.DoesNotExist):
-        return Response({'error': 'Invalid token'}, status=401)
+    user = request.user
+    return Response({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'role': user.role,
+        'is_active': user.is_active,
+        'last_login': user.last_login
+    })
