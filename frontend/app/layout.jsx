@@ -1,16 +1,14 @@
-import Header from '@/components/header';
+import "./globals.css";
+
+export const metadata = {
+  title: "DAM System",
+  description: "Digital Asset Management System",
+};
 
 export default function RootLayout({ children }) {
-  return children
   return (
     <html lang="en">
-      <head>
-        <title>DAM System</title>
-      </head>
-      <body suppressHydrationWarning={true}>
-        <Header />
-        <main>{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
