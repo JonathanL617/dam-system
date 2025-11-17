@@ -81,10 +81,10 @@ export default function LoginPage() {
             <form onSubmit={handleLogin}>
               <VStack gap={4}>
                 <Box width="full">
-                  <Text fontWeight="medium" mb={2}>Username or Email *</Text>
+                  <Text fontWeight="medium" mb={2}>Username *</Text>
                   <Input 
                     type="text" 
-                    placeholder="your@email.com / username" 
+                    placeholder="username" 
                     value={identifier} 
                     onChange={(e) => setIdentifier(e.target.value)} 
                     disabled={loading}
@@ -118,9 +118,9 @@ export default function LoginPage() {
 
             <Text fontSize="sm" color="gray.600" textAlign="center">
               Demo credentials:<br />
-              <strong>Admin:</strong> admin or admin@example.com / Admin123<br />
-              <strong>Editor:</strong> editor@example.com / editor123<br />
-              <strong>Viewer:</strong> viewer@example.com / viewer123
+              <strong>Admin:</strong> admin / Admin123<br />
+              <strong>Editor:</strong> editor / editor123<br />
+              <strong>Viewer:</strong> viewer / viewer123
             </Text>
 
             <Box textAlign="center" pt={2} borderTop="1px solid" borderColor="gray.200">
