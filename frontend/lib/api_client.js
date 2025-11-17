@@ -65,10 +65,10 @@ export const loginUser = async (identifier, password) => {
   return data;
 };
 
-export const registerUser = (username, email, password) =>
+export const registerUser = (username, email, password, role) =>
   api('/auth/register/', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password })
+    body: JSON.stringify({ username, email, password, role })
   });
 
 export const logoutUser = () => {

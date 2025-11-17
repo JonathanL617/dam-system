@@ -1,6 +1,6 @@
 import { Box, Text, Image, useColorModeValue } from '@chakra-ui/react';
 import { useState } from 'react';
-import AssetPreview from './AssetPreview';
+import AssetPreview from '../AssetPreview';
 
 export default function AssetCard({ asset }) {
   const [open, setOpen] = useState(false);
