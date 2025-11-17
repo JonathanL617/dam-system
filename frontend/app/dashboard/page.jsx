@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Heading, Text, VStack, SimpleGrid, Badge, Button } from "@chakra-ui/react";
+import { Box, Heading, Text, VStack, Grid, Badge, Button } from "@chakra-ui/react";
 import { getProfile, getUsers } from '../../lib/api_client';
 
 // Simple Stat component replacement for v3
@@ -81,13 +81,13 @@ export default function Dashboard() {
       {user.role === 'admin' && (
         <Box bg="purple.50" p={6} rounded="lg" mb={8}>
           <Heading size="md" mb={4}>Admin Stats</Heading>
-          <SimpleGrid columns={{ base: 1, md: 3, lg: 5 }} spacing={6}>
+          <Grid templateColumns={{base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6} mb={8}>
             <Stat label="Total Users" value={stats.total || 0} />
             <Stat label="Active" value={stats.active || 0} />
             <Stat label="Viewers" value={stats.viewer || 0} />
             <Stat label="Editors" value={stats.editor || 0} />
             <Stat label="Admins" value={stats.admin || 0} />
-          </SimpleGrid>
+          </Grid>
           <Button mt={4} colorScheme="purple" onClick={() => router.push('/admin/users')}>
             Manage Users
           </Button>
