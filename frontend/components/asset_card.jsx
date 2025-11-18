@@ -1,6 +1,7 @@
-import { Box, Text, Image, useColorModeValue } from '@chakra-ui/react';
+import { Box, Text, Image, useColorModeValue, Button, HStack } from '@chakra-ui/react';
 import { useState } from 'react';
 import AssetPreview from '../AssetPreview';
+import { useRouter } from 'next/navigation';
 
 export default function AssetCard({ asset }) {
   const [open, setOpen] = useState(false);
@@ -42,6 +43,16 @@ export default function AssetCard({ asset }) {
         {asset.type === 'video' && <Text>🎥 Video File</Text>}
         {asset.type === '3d' && <Text>🧊 3D Model</Text>}
       </Box>
+
+      <HStack spacing={3} mt={2}>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          Preview
+        </Button>
+
+        <Button size="sm" variant="outline" onClick={() => router.push(`/assets/${asset.id}`)}>
+          Details
+        </Button>
+      </HStack>
 
       {open && <AssetPreview asset={asset} onClose={() => setOpen(false)} />}
     </>
