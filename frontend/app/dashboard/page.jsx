@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, Select, HStack, RotateCcw, Edit3, Trash2, Input, Portal, createListCollection,
+import { Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, HStack, RotateCcw, Edit3, Trash2, Input,
   DialogRoot, DialogBackdrop, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger } from "@chakra-ui/react";
+import { Select } from "@chakra-ui/react";
 
 import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword } from '../../lib/api_client';
 
@@ -17,19 +18,17 @@ function Stat({ label, value }) {
   );
 }
 
-const roles = createListCollection({
-  items: [
-    { label: "Editor", value: "editor" },
-    { label: "Viewer", value: "viewer" },
-  ],
-})
+const roles = [
+  { label: "Editor", value: "editor" },
+  { label: "Viewer", value: "viewer" },
+];
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({});
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: '' });
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
@@ -91,11 +90,10 @@ export default function Dashboard() {
 
   const handleCreateUser = async () => {
     setLoading(true);
-    
     try {
-      await registerUser(newUser.username, newUser.email, newUser.password, newUser.role);
+      await registerUser(newUser.username, newUser.email, newUser.password);
       setIsModalOpen(false);
-      setNewUser({ username: '', email: '', password: '', role: 'viewer' });
+      setNewUser({ username: '', email: '', password: '' });
       fetchUsers();
     } catch (err) {
       console.error('Error creating user:', err);
@@ -117,13 +115,14 @@ export default function Dashboard() {
     }
   };
 
-  const handleRoleChange = async (userId, newRole) => {
+  // Update user role and active status
+  const handleUpdateUser = async (userId, updates) => {
     try {
-      await updateUserRole(userId, newRole);
+      await updateUserRole(userId, updates.role, updates.is_active);
       fetchUsers();
     } catch (err) {
-      console.error('Error updating role:', err);
-      alert('Failed to update role');
+      console.error('Error updating user:', err);
+      alert('Failed to update user');
     }
   };
 
@@ -308,32 +307,7 @@ export default function Dashboard() {
                 />
               </Box>
               
-              <Box width="full">
-                <Select.Root collection={roles} fontSize={"sm"} fontWeight="medium" mb={1}>
-                  <Select.HiddenSelect />
-                  <Select.Label>Role</Select.Label>
-                  <Select.Control>
-                    <Select.Trigger>
-                      <Select.ValueText placeholder="Select role" />
-                    </Select.Trigger>
-                    <Select.IndicatorGroup>
-                      <Select.Indicator />
-                    </Select.IndicatorGroup>
-                  </Select.Control>
-                  <Portal>
-                    <Select.Positioner>
-                      <Select.Content>
-                        {roles.items.map((role) => (
-                          <Select.Item item={role} key={role.value}>
-                            {role.label}
-                            <Select.ItemIndicator />
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Portal>
-                </Select.Root>
-              </Box>
+              {/* Role selection is not needed for register, backend always sets 'viewer' */}
             </VStack>
           </DialogBody>
           <DialogFooter>
@@ -391,37 +365,69 @@ export default function Dashboard() {
             <VStack spacing={4}>
               <Box width="full">
                 <Text mb={1} fontSize="sm" fontWeight="medium">Username</Text>
-                <Input value={editingUser?.username} bg="gray.100" />
+                <Input
+                  value={editingUser?.username ?? ''}
+                  bg="gray.100"
+                  onChange={e => setEditingUser({ ...editingUser, username: e.target.value })}
+                />
               </Box>
               <Box width="full">
                 <Text mb={1} fontSize="sm" fontWeight="medium">Email</Text>
-                <Input value={editingUser?.email} bg="gray.100" />
+                <Input
+                  value={editingUser?.email ?? ''}
+                  bg="gray.100"
+                  onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
+                />
               </Box>
               <Box width="full">
                 <Text mb={1} fontSize="sm" fontWeight="medium">Role</Text>
-                <Select.Root 
-                  collection={roles}
-                  value={[editingUser?.role]}
-                  onValueChange={(details) => setEditingUser({...editingUser, role: details.value[0]})}
-                >
-                  <Select.Control>
-                    <Select.Trigger>
-                      <Select.ValueText placeholder="Select role" />
-                    </Select.Trigger>
-                  </Select.Control>
-                  <Portal>
-                    <Select.Positioner>
-                      <Select.Content>
-                        {roles.items.map((role) => (
-                          <Select.Item item={role} key={role.value}>
-                            {role.label}
-                            <Select.ItemIndicator/>
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Portal>
-                </Select.Root>
+                <HStack spacing={4} mt={2}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="editor"
+                      checked={editingUser?.role === "editor"}
+                      onChange={() => setEditingUser({ ...editingUser, role: "editor" })}
+                    />
+                    Editor
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="viewer"
+                      checked={editingUser?.role === "viewer"}
+                      onChange={() => setEditingUser({ ...editingUser, role: "viewer" })}
+                    />
+                    Viewer
+                  </label>
+                </HStack>
+              </Box>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Active Status</Text>
+                <HStack spacing={4} mt={2}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="active"
+                      value="active"
+                      checked={editingUser?.is_active === true}
+                      onChange={() => setEditingUser({ ...editingUser, is_active: true })}
+                    />
+                    Active
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="active"
+                      value="inactive"
+                      checked={editingUser?.is_active === false}
+                      onChange={() => setEditingUser({ ...editingUser, is_active: false })}
+                    />
+                    Inactive
+                  </label>
+                </HStack>
               </Box>
             </VStack>
           </DialogBody>
@@ -430,8 +436,8 @@ export default function Dashboard() {
               Cancel
             </Button>
             <Button colorPalette="blue" onClick={async () => {
-              if (editingUser?.role) {
-                await handleRoleChange(editingUser.id, editingUser.role);
+              if (editingUser?.role !== undefined && editingUser?.is_active !== undefined) {
+                await handleUpdateUser(editingUser.id, { role: editingUser.role, is_active: editingUser.is_active });
                 setEditingUser(null);
               }
             }}>

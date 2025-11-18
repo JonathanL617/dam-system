@@ -97,6 +97,10 @@ def login_user(request):
     user = User.objects.filter(username=username).first() or User.objects.filter(email=username).first()
     if not user or not check_password(password, user.password_hash):
         return Response({'error': 'Invalid credentials'}, status=400)
+    
+    if not user.is_active:
+        return Response({'error': 'Account is deactivated.'}, status=403)
+
 
     # Update last login
     user.last_login = timezone.now()
@@ -142,11 +146,18 @@ def user_detail(request, user_id):
     if request.method == 'PUT':
         role = request.data.get('role')
         password = request.data.get('password')
+        is_active = request.data.get('is_active')
 
         if role in ['admin', 'editor', 'viewer']:
             user.role = role
         if password and len(password) >= 8:
             user.password_hash = make_password(password)
+        if is_active is not None:
+            # Accept both boolean and string values
+            if isinstance(is_active, bool):
+                user.is_active = is_active
+            elif isinstance(is_active, str):
+                user.is_active = is_active.lower() == 'true'
         user.save()
         return Response({'success': True, 'message': 'User updated successfully.'})
 

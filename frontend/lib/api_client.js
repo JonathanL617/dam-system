@@ -65,10 +65,10 @@ export const loginUser = async (identifier, password) => {
   return data;
 };
 
-export const registerUser = (username, email, password, role) =>
+export const registerUser = (username, email, password) =>
   api('/auth/register/', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password, role })
+    body: JSON.stringify({ username, email, password })
   });
 
 export const logoutUser = () => {
@@ -89,14 +89,14 @@ export const getProfile = () => api('/auth/profile/');
 export const getUsers = () => api('/admin/users/');
 export const deleteUser = (id) => api(`/admin/users/${id}/`, { method: 'DELETE' });
 export const resetPassword = (id, newPassword) =>
-  api(`/admin/users/${id}/reset-password/`, {
-    method: 'POST',
-    body: JSON.stringify({ new_password: newPassword })
-  });
-export const updateUserRole = (id, role) =>
   api(`/admin/users/${id}/`, {
-    method: 'PATCH',
-    body: JSON.stringify({ role })
+    method: 'PUT',
+    body: JSON.stringify({ password: newPassword })
+  });
+export const updateUserRole = (id, role, is_active) =>
+  api(`/admin/users/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify({ role, is_active })
   });
 
 // -------------------------
