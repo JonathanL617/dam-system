@@ -33,6 +33,11 @@ urlpatterns = [
     # Admin endpoints
     path('api/admin/users/', api_views.list_users, name='list_users'),
     path('api/admin/users/<int:user_id>/', api_views.user_detail, name='user_detail'),
+    
+    # Asset endpoints
+    path('api/assets/', api_views.list_assets, name='list_assets'),
+    path('api/assets/<int:group_id>/upload_version/', api_views.upload_asset_version, name='upload_asset_version'),
+    path('api/assets/upload/', api_views.create_and_upload_asset, name='create_and_upload_asset'),
 ]
 
 # Serve media files in development

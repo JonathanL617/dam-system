@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {SimpleGrid, Box, Button, HStack, Heading, Spinner, Center, Text} from '@chakra-ui/react';
+import { SimpleGrid, Box, Button, HStack, Heading, Spinner, Center, Text } from '@chakra-ui/react';
 import SearchBar from '../../components/search_bar';
 import AssetCard from '../../components/asset_card';
 import { getAssets } from '../../lib/api_client';
@@ -68,10 +68,10 @@ export default function AssetGalleryPage() {
   return (
     <Box p={8}>
       <Heading mb={6}>Asset Gallery</Heading>
-      
+
       <HStack mb={6} justify="space-between">
         <SearchBar onSearch={handleSearch} />
-        
+
         {(role === 'editor' || role === 'admin') && (
           <Button colorScheme="green" onClick={() => router.push('/assets/upload/page')}>
             + Upload Asset
@@ -88,7 +88,7 @@ export default function AssetGalleryPage() {
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
           {filtered.map(asset => (
-            <AssetCard key={asset.id} asset={asset} canEdit={role === 'editor' || role === 'admin'}/>
+            <AssetCard key={asset.id} asset={asset} canEdit={role === 'editor' || role === 'admin'} />
           ))}
         </SimpleGrid>
       )}

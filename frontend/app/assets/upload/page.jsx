@@ -1,8 +1,11 @@
 // assets/upload/asset_upload_page.jsx
+'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {Box, Button, Input, VStack, Heading, Text, Spinner, Alert, AlertIcon} from '@chakra-ui/react';
-import UploadDropZone from '../../components/upload_drop_zone';
+import { Box, Button, Input, VStack, Heading, Text } from '@chakra-ui/react';
+import { ArrowLeft } from 'react-feather';
+
+import UploadDropZone from '@/components/upload_drop_zone';
 
 export default function AssetUploadPage() {
   const [file, setFile] = useState(null);
@@ -16,64 +19,66 @@ export default function AssetUploadPage() {
 
     setLoading(true);
     const token = localStorage.getItem('token');
-
-    // Step 1: Create group
-    const groupRes = await fetch('http://localhost:8000/api/assets/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Token ${token}`
-      },
-      body: JSON.stringify({ name, asset_type: 'image' })
-    });
-    const group = await groupRes.json();
-
-    // Step 2: Upload file
     const form = new FormData();
+    form.append('name', name);
     form.append('file', file);
-    form.append('change_notes', 'Uploaded from frontend');
+    form.append('change_notes', 'Initial upload from frontend');
 
-    const uploadRes = await fetch(`http://localhost:8000/api/assets/${group.id}/upload_version/`, {
+    const res = await fetch('http://localhost:8000/api/assets/upload/', {
       method: 'POST',
       headers: { 'Authorization': `Token ${token}` },
       body: form
     });
 
-    if (uploadRes.ok) {
+    if (res.ok) {
       router.push('/assets');
     } else {
-      setError('Upload failed');
+      const data = await res.json();
+      setError(data.error || 'Upload failed');
     }
     setLoading(false);
   };
 
   return (
     <Box maxW="2xl" mx="auto" p={8}>
-        <Heading mb={6}>Upload New Asset</Heading>
+      <Button
+        leftIcon={<ArrowLeft size={16} />}
+        variant="ghost"
+        mb={4}
+        onClick={() => router.back()}
+      >
+        Back
+      </Button>
 
-        <VStack spacing={6}>
-            <Input
-            placeholder="Asset Name (e.g. Hero Banner)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            />
+      <Heading mb={6}>Upload New Asset</Heading>
 
-            <UploadDropZone onFileDrop={setFile} />
+      <VStack spacing={6}>
+        <Input
+          placeholder="Asset Name (e.g. Hero Banner)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-            {file && <Text>Selected: <strong>{file.name}</strong></Text>}
+        <UploadDropZone onFileDrop={setFile} />
 
-            <Button
-            colorScheme="blue"
-            size="lg"
-            onClick={handleUpload}
-            isLoading={loading}
-            isDisabled={!file || !name}
-            >
-            Upload Asset
-            </Button>
+        {file && <Text>Selected: <strong>{file.name}</strong></Text>}
 
-            {error && <Alert status="error"><AlertIcon />{error}</Alert>}
-        </VStack>
+        <Button
+          colorScheme="blue"
+          size="lg"
+          onClick={handleUpload}
+          isLoading={loading}
+          isDisabled={!file || !name}
+        >
+          Upload Asset
+        </Button>
+
+        {error && (
+          <Box p={4} bg="red.100" color="red.700" borderRadius="md" width="100%">
+            {error}
+          </Box>
+        )}
+      </VStack>
     </Box>
   );
 }

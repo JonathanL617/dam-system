@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Text, Input } from '@chakra-ui/react';
 
-const UploadDropZone = ({ onFileDrop, assetType }) => {
+const UploadDropZone = ({ onFileDrop }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
@@ -37,30 +37,11 @@ const UploadDropZone = ({ onFileDrop, assetType }) => {
   };
 
   const validateFile = (file) => {
-    const allowedTypes = {
-      image: ['.jpg', '.jpeg', '.png'],
-      video: ['.mp4'],
-      '3d': ['.glb'],
-    };
-    const maxSizes = {
-      image: 50 * 1024 * 1024, // 50MB
-      video: 500 * 1024 * 1024, // 500MB
-      '3d': 100 * 1024 * 1024, // 100MB
-    };
-
-    const fileType = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    const maxSize = maxSizes[assetType];
-
-    if (!allowedTypes[assetType]?.includes(fileType)) {
-      setError(`Invalid file type. Allowed types: ${allowedTypes[assetType].join(', ')}`);
+    // Simple validation: check if it has an extension
+    if (!file.name.includes('.')) {
+      setError('Invalid file.');
       return;
     }
-
-    if (file.size > maxSize) {
-      setError(`File size exceeds the limit of ${(maxSize / (1024 * 1024)).toFixed(2)} MB.`);
-      return;
-    }
-
     onFileDrop(file);
   };
 
@@ -83,7 +64,7 @@ const UploadDropZone = ({ onFileDrop, assetType }) => {
       alignItems="center"
       justifyContent="center"
     >
-      <Text>{isDragging ? 'Drop the file here...' : 'Drag and drop a file, or click to select'}</Text>
+      <Text>{isDragging ? 'Drop the file here...' : 'Drag and drop a file (Image, Video, 3D), or click to select'}</Text>
       {error && <Text color="red.500" mt={2}>{error}</Text>}
       <Input
         type="file"
@@ -97,7 +78,6 @@ const UploadDropZone = ({ onFileDrop, assetType }) => {
 
 UploadDropZone.propTypes = {
   onFileDrop: PropTypes.func.isRequired,
-  assetType: PropTypes.oneOf(['image', 'video', '3d']).isRequired,
 };
 
 export default UploadDropZone;

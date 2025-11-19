@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Input, InputGroup, InputLeftElement } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { Search } from 'react-feather';
 
 export default function SearchBar({ onSearch, placeholder = 'Search assets...' }) {
   const [query, setQuery] = useState('');
@@ -17,16 +17,17 @@ export default function SearchBar({ onSearch, placeholder = 'Search assets...' }
   }, [query, onSearch]);
 
   return (
-    <InputGroup maxW="480px">
-      <InputLeftElement pointerEvents="none">
-        <SearchIcon boxSize={4} color="gray.500" />
-      </InputLeftElement>
+    <Box position="relative" maxW="480px">
+      <Box position="absolute" left="3" top="50%" transform="translateY(-50%)" zIndex="2" pointerEvents="none">
+        <Search size={16} color="gray" />
+      </Box>
       <Input
+        pl={10}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         bg="white"
       />
-    </InputGroup>
+    </Box>
   );
 }
