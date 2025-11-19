@@ -45,11 +45,11 @@ export default function AssetCard({ asset }) {
       </Box>
 
       <HStack spacing={3} mt={2}>
-        <Button size="sm" onClick={() => setOpen(true)}>
+        <Button size="sm" onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
           Preview
         </Button>
 
-        <Button size="sm" variant="outline" onClick={() => router.push(`/assets/${asset.id}`)}>
+        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); router.push(`/assets/${asset.id}`); }}>
           Details
         </Button>
       </HStack>
