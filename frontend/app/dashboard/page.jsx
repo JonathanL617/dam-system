@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, Select, HStack, RotateCcw, Edit3, Trash2, Input, Portal, createListCollection,
-  DialogRoot, DialogBackdrop, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger } from "@chakra-ui/react";
+  DialogRoot, DialogBackdrop, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger, SimpleGrid, Center, Spinner } from "@chakra-ui/react";
 
-import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword } from '../../lib/api_client';
+import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword, getAssets } from '../../lib/api_client';
+import SearchBar from '../../components/search_bar';
+import AssetCard from '../../components/asset_card';
 
 // Simple Stat component replacement for v3
 function Stat({ label, value }) {
@@ -34,6 +36,9 @@ export default function Dashboard() {
   const [editingUser, setEditingUser] = useState(null);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [assets, setAssets] = useState([]);
+  const [filteredAssets, setFilteredAssets] = useState([]);
+  const [assetsLoading, setAssetsLoading] = useState(false);
   const router = useRouter();
 
   const fetchUsers = async () => {
@@ -80,6 +85,27 @@ export default function Dashboard() {
       router.push('/login');
     });
   }, [router]);
+
+  // Fetch assets for viewers (and others who browse)
+  const fetchAssets = async () => {
+    setAssetsLoading(true);
+    try {
+      const res = await getAssets();
+      const list = res.results || res;
+      setAssets(list);
+      setFilteredAssets(list);
+    } catch (err) {
+      console.error('Error fetching assets:', err);
+    } finally {
+      setAssetsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    // Fetch assets for any role that can view the gallery
+    fetchAssets();
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -259,14 +285,39 @@ export default function Dashboard() {
 
       
       {user.role === 'viewer' && (
-        <Box bg="blue.50" p={4} rounded="md" mb={4}>
-          <VStack align="start" spacing={2}>
-            <Text fontWeight="bold">Viewer Access</Text>
-            <Text>You can view and download assets.</Text>
-            <Button onClick={() => router.push('/assets')}>
-              Browse Gallery
-            </Button>
-          </VStack>
+        <Box mb={6}>
+          <Box bg="blue.50" p={4} rounded="md" mb={4}>
+            <VStack align="start" spacing={2}>
+              <Text fontWeight="bold">Viewer Access</Text>
+              <Text>You can view and download assets.</Text>
+              <Button onClick={() => router.push('/assets')}>Browse Gallery</Button>
+            </VStack>
+          </Box>
+
+          <Box mb={4}>
+            <SearchBar onSearch={(q) => {
+              if (!q || !q.trim()) return setFilteredAssets(assets);
+              const lower = q.toLowerCase();
+              setFilteredAssets(
+                assets.filter(a =>
+                  (a.name || '').toLowerCase().includes(lower) ||
+                  (a.tags && a.tags.some(t => (t.tag || '').toLowerCase().includes(lower)))
+                )
+              );
+            }} />
+          </Box>
+
+          {assetsLoading ? (
+            <Center py={12}><Spinner size="lg" /></Center>
+          ) : filteredAssets.length === 0 ? (
+            <Center py={12}><Text color="gray.500">No assets found.</Text></Center>
+          ) : (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {filteredAssets.map(asset => (
+                <AssetCard key={asset.id} asset={asset} />
+              ))}
+            </SimpleGrid>
+          )}
         </Box>
       )}
 
