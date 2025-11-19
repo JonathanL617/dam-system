@@ -20,6 +20,7 @@
     "react-babylonjs": "^3.2.5-beta.2",
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
+    "react-feather": "^2.0.10",
     "react-redux": "^9.2.0"
   }
 }
