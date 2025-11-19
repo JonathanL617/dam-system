@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, HStack,
-  RotateCcw, Edit3, Trash2, Input, DialogRoot, DialogBackdrop, DialogContent,
+  Input, DialogRoot, DialogBackdrop, DialogContent,
   DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger,
   SimpleGrid, Center, Spinner, Select
 } from "@chakra-ui/react";
+import { RotateCcw, Edit3, Trash2 } from 'react-feather';
 
 import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword, getAssets } from '../../lib/api_client';
 import SearchBar from '../../components/search_bar';

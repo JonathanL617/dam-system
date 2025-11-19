@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function AssetCard({ asset }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   // Colors that switch automatically between light & dark mode
   const bg = useColorModeValue('gray.100', 'gray.700');
