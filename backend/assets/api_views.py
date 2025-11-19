@@ -144,6 +144,10 @@ def user_detail(request, user_id):
         return Response({'error': 'User not found.'}, status=404)
 
     if request.method == 'PUT':
+    
+        if user.role == 'admin':
+             return Response({'error': 'Cannot edit admin account.'}, status=400)
+
         role = request.data.get('role')
         password = request.data.get('password')
         is_active = request.data.get('is_active')
