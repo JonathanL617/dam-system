@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
-import { Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, Select, HStack, RotateCcw, Edit3, Trash2, Input, Portal, createListCollection,
-  DialogRoot, DialogBackdrop, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger, SimpleGrid, Center, Spinner } from "@chakra-ui/react";
-=======
-import { Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, HStack, RotateCcw, Edit3, Trash2, Input,
-  DialogRoot, DialogBackdrop, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger } from "@chakra-ui/react";
-import { Select } from "@chakra-ui/react";
->>>>>>> dc96fef05fb22b7f598690161c886b085fb31fed
+import {
+  Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, HStack,
+  RotateCcw, Edit3, Trash2, Input, DialogRoot, DialogBackdrop, DialogContent,
+  DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger,
+  SimpleGrid, Center, Spinner, Select
+} from "@chakra-ui/react";
 
 import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword, getAssets } from '../../lib/api_client';
 import SearchBar from '../../components/search_bar';
