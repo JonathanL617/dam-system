@@ -5,7 +5,7 @@ from rest_framework.permissions import BasePermission, AllowAny
 from rest_framework.authentication import BaseAuthentication
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from assets.models import User, AuthToken
+from assets.models import User, AuthToken, Asset, AssetGroup
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework import exceptions
@@ -186,3 +186,168 @@ def user_dashboard(request):
         'is_active': user.is_active,
         'last_login': user.last_login
     })
+
+# -----------------------------
+# ASSETS: LIST
+# -----------------------------
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def list_assets(request):
+    if request.method == 'POST':
+        return create_asset_group(request)
+
+    # Simple implementation: return all active assets
+    assets = Asset.objects.filter(is_active=True).select_related('asset_group')
+    
+    results = []
+    for asset in assets:
+        results.append({
+            'id': asset.id,
+            'name': asset.asset_group.name,
+            'type': asset.asset_group.asset_type,
+            'url': asset.web_version_path or asset.file_path,
+            'thumbnail': asset.thumbnail_path,
+            'tags': [{'tag': t.tag} for t in asset.asset_group.tags.all()],
+            'uploaded_at': asset.uploaded_at,
+            'file_size': asset.get_file_size_display()
+        })
+    
+    return Response({'results': results})
+
+@api_view(['POST'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsCustomAdmin]) # Only editors/admins can upload
+def create_asset_group(request):
+    name = request.data.get('name')
+    asset_type = request.data.get('asset_type')
+    
+    if not name or not asset_type:
+        return Response({'error': 'Name and asset_type are required'}, status=400)
+        
+    # Check if exists
+    if AssetGroup.objects.filter(name=name).exists():
+         return Response({'error': 'Asset with this name already exists'}, status=400)
+         
+    group = AssetGroup.objects.create(
+        name=name,
+        asset_type=asset_type,
+        created_by=request.user.username
+    )
+    
+    return Response({'id': group.id, 'name': group.name})
+
+@api_view(['POST'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsCustomAdmin])
+def upload_asset_version(request, group_id):
+    try:
+        group = AssetGroup.objects.get(id=group_id)
+    except AssetGroup.DoesNotExist:
+        return Response({'error': 'Asset group not found'}, status=404)
+        
+    file = request.FILES.get('file')
+    change_notes = request.data.get('change_notes', '')
+    
+    if not file:
+        return Response({'error': 'No file provided'}, status=400)
+        
+    # Determine version number
+    last_version = group.get_latest_version()
+    new_version_num = (last_version.version_number + 1) if last_version else 1
+    
+    # Save file (simple save, in real app use S3 or similar)
+    # For this demo we just save to media root
+    import os
+    from django.conf import settings
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    
+    file_ext = os.path.splitext(file.name)[1]
+    filename = f"{group.name}_v{new_version_num}{file_ext}"
+    path = default_storage.save(f"assets/{filename}", ContentFile(file.read()))
+    
+    # Create Asset Version
+    asset = Asset.objects.create(
+        asset_group=group,
+        version_number=new_version_num,
+        filename=filename,
+        file_path=f"/media/{path}",
+        file_size=file.size,
+        file_type=file_ext.replace('.', ''),
+        uploaded_by=request.user.username,
+        change_notes=change_notes
+    )
+    
+    # Update group current version
+    group.current_version = asset
+    group.save()
+    
+    # Update group current version
+    group.current_version = asset
+    group.save()
+    
+    return Response({'success': True, 'version': asset.version_number})
+
+@api_view(['POST'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsCustomAdmin])
+def create_and_upload_asset(request):
+    name = request.data.get('name')
+    file = request.FILES.get('file')
+    change_notes = request.data.get('change_notes', 'Initial upload')
+    
+    if not name or not file:
+        return Response({'error': 'Name and file are required'}, status=400)
+        
+    # Check if exists
+    if AssetGroup.objects.filter(name=name).exists():
+         return Response({'error': 'Asset with this name already exists'}, status=400)
+
+    # Determine asset_type from mime/extension
+    import mimetypes
+    import os
+    
+    mime_type, _ = mimetypes.guess_type(file.name)
+    ext = os.path.splitext(file.name)[1].lower()
+    
+    asset_type = 'image' # default
+    if mime_type:
+        if mime_type.startswith('video/'):
+            asset_type = 'video'
+        elif mime_type.startswith('image/'):
+            asset_type = 'image'
+            
+    # Override for 3D models based on extension
+    if ext in ['.glb', '.gltf', '.obj', '.fbx']:
+        asset_type = '3d'
+        
+    # Create Group
+    group = AssetGroup.objects.create(
+        name=name,
+        asset_type=asset_type,
+        created_by=request.user.username
+    )
+    
+    # Save File & Create Version
+    from django.conf import settings
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    
+    filename = f"{group.name}_v1{ext}"
+    path = default_storage.save(f"assets/{filename}", ContentFile(file.read()))
+    
+    asset = Asset.objects.create(
+        asset_group=group,
+        version_number=1,
+        filename=filename,
+        file_path=f"/media/{path}",
+        file_size=file.size,
+        file_type=ext.replace('.', ''),
+        uploaded_by=request.user.username,
+        change_notes=change_notes
+    )
+    
+    group.current_version = asset
+    group.save()
+    
+    return Response({'success': True, 'id': group.id})
