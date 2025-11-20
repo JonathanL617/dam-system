@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Input, InputGroup, InputLeftElement } from '@chakra-ui/react';
-import { Search } from 'react-feather';
+import { Input, InputGroup, InputLeftElement, Icon } from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
 
 export default function SearchBar({ onSearch, placeholder = 'Search assets...' }) {
   const [query, setQuery] = useState('');
 
-  // simple debounce
   useEffect(() => {
     const t = setTimeout(() => {
       if (onSearch) onSearch(query);
@@ -17,17 +16,16 @@ export default function SearchBar({ onSearch, placeholder = 'Search assets...' }
   }, [query, onSearch]);
 
   return (
-    <Box position="relative" maxW="480px">
-      <Box position="absolute" left="3" top="50%" transform="translateY(-50%)" zIndex="2" pointerEvents="none">
-        <Search size={16} color="gray" />
-      </Box>
+    <InputGroup maxW="640px">
+      <InputLeftElement pointerEvents="none">
+        <Icon as={SearchIcon} color="gray.400" />
+      </InputLeftElement>
       <Input
-        pl={10}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         bg="white"
       />
-    </Box>
+    </InputGroup>
   );
 }
