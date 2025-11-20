@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AssetPreview from '../AssetPreview';
 import { useRouter } from 'next/navigation';
 
-export default function AssetCard({ asset }) {
+export default function AssetCard({ asset, onOpen }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -24,7 +24,10 @@ export default function AssetCard({ asset }) {
         mb={3}
         cursor="pointer"
         _hover={{ backgroundColor: hoverBg }}
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          if (onOpen) return onOpen(asset);
+          return setOpen(true);
+        }}
         color={textColor}
       >
         <Text fontWeight="bold" mb={2}>
@@ -46,7 +49,7 @@ export default function AssetCard({ asset }) {
       </Box>
 
       <HStack spacing={3} mt={2}>
-        <Button size="sm" onClick={(e) => { e.stopPropagation(); setOpen(true); }}>
+        <Button size="sm" onClick={(e) => { e.stopPropagation(); if (onOpen) return onOpen(asset); setOpen(true); }}>
           Preview
         </Button>
 
@@ -55,7 +58,8 @@ export default function AssetCard({ asset }) {
         </Button>
       </HStack>
 
-      {open && <AssetPreview asset={asset} onClose={() => setOpen(false)} />}
+      {/* Render internal preview only when no external onOpen handler provided */}
+      {!onOpen && open && <AssetPreview asset={asset} onClose={() => setOpen(false)} />}
     </>
   );
 }

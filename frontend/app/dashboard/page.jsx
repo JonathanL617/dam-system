@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Box, Heading, Text, Button, Flex, SimpleGrid, Center, Spinner, VStack } from '@chakra-ui/react';
 import SearchBar from '../../components/search_bar';
 import AssetCard from '../../components/asset_card';
+import AssetPreview from '../../AssetPreview';
 import { getAssets } from '../../lib/api_client';
 
 export default function Dashboard() {
@@ -72,6 +73,11 @@ export default function Dashboard() {
     }
   };
 
+  // Viewer state: open a central preview modal from the dashboard
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const openViewer = (asset) => setSelectedAsset(asset);
+  const closeViewer = () => setSelectedAsset(null);
+
   return (
     <Box p={6}>
       <Flex justify="space-between" align="center" mb={6}>
@@ -89,8 +95,11 @@ export default function Dashboard() {
         <VStack align="stretch" spacing={4}>
           {error && <Text color="red.500">Failed to load assets: {error}</Text>}
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {filtered.map(a => <AssetCard key={a.id} asset={a} />)}
+            {filtered.map(a => <AssetCard key={a.id} asset={a} onOpen={openViewer} />)}
           </SimpleGrid>
+          {selectedAsset && (
+            <AssetPreview asset={selectedAsset} onClose={closeViewer} />
+          )}
         </VStack>
       )}
     </Box>
