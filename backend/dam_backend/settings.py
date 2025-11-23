@@ -11,31 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
-from decouple import AutoConfig
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment variables from the project's BASE_DIR/.env reliably
-# Use string path to ensure decouple finds the file on all platforms
-env = AutoConfig(search_path=str(BASE_DIR))
-
-# Fallback: ensure .env values are loaded into os.environ (helps when AutoConfig
-# doesn't pick up the file in some environments). This is a lightweight parser
-# and intentionally minimal to avoid adding another dependency.
-env_path = BASE_DIR / '.env'
-if env_path.exists():
-    for raw in env_path.read_text().splitlines():
-        line = raw.strip()
-        if not line or line.startswith('#'):
-            continue
-        if '=' not in line:
-            continue
-        k, v = line.split('=', 1)
-        k = k.strip()
-        v = v.strip().strip('"').strip("'")
-        os.environ.setdefault(k, v)
 
 
 # Quick-start development settings - unsuitable for production
@@ -121,26 +100,16 @@ WSGI_APPLICATION = 'dam_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# If DB_PASSWORD is not provided, fall back to a local SQLite database to
-# allow quick local development without a running Postgres server.
-if os.getenv('DB_PASSWORD'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'dam_database'),
-            'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 
 # Password validation

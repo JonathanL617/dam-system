@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = 'http://localhost:8000/api';
 
 // Get token safely
 const getToken = () => {
@@ -29,27 +29,15 @@ export const api = async (endpoint, options = {}) => {
   const fullUrl = `${API_URL}${endpoint}`;
   console.log('Fetching URL:', fullUrl); // debug
 
-  try {
-    const res = await fetch(fullUrl, { ...options, headers, mode: 'cors' });
+  const res = await fetch(fullUrl, { ...options, headers });
 
-    if (!res.ok) {
-      const msg = await res.text();
-      console.error('API error response:', msg);
-      throw new Error(`API error: ${res.status}`);
-    }
-
-    // If there's no JSON body (e.g. 204), handle gracefully
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      return null;
-    }
-
-    return res.json();
-  } catch (err) {
-    console.error('Network/API fetch failed:', err);
-    // Re-throw a clearer error for UI handling
-    throw new Error(`Network error: ${err.message || err}`);
+  if (!res.ok) {
+    const msg = await res.text();
+    console.error('API error response:', msg);
+    throw new Error(`API error: ${res.status}`);
   }
+
+  return res.json();
 };
 
 // -------------------------

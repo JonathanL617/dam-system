@@ -1,289 +1,506 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Box,
-  Heading,
-  Text,
-  Spinner,
-  Grid,
-  GridItem,
-  Image,
-  Tag,
-  Flex,
-  Button,
-  Input,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody
+  Box, Heading, Text, VStack, Grid, Badge, Button, Flex, Table, HStack,
+  Input, DialogRoot, DialogBackdrop, DialogContent,
+  DialogHeader, DialogBody, DialogFooter, DialogTitle, DialogCloseTrigger,
+  SimpleGrid, Center, Spinner, Select
 } from "@chakra-ui/react";
+import { RotateCcw, Edit3, Trash2 } from 'react-feather';
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { getProfile, getUsers, deleteUser, updateUserRole, registerUser, resetPassword, getAssets } from '../../lib/api_client';
+import SearchBar from '../../components/search_bar';
+import AssetCard from '../../components/asset_card';
 
-export default function DashboardPage() {
+// Simple Stat component replacement for v3
+function Stat({ label, value }) {
+  return (
+    <Box p={5} bg="white" rounded="lg" shadow="md" textAlign="center">
+      <Text fontSize="md" color="gray.600">{label}</Text>
+      <Text fontSize="4xl" fontWeight="bold" color="gray.800">{value}</Text>
+    </Box>
+  );
+}
+
+const roles = [
+  { label: "Editor", value: "editor" },
+  { label: "Viewer", value: "viewer" },
+];
+
+export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({});
+  const [users, setUsers] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
   const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
-  const [sortBy, setSortBy] = useState("created_at");
+  const [filteredAssets, setFilteredAssets] = useState([]);
+  const [assetsLoading, setAssetsLoading] = useState(false);
+  const router = useRouter();
 
-  // Example role, replace with your logic
-  const role = localStorage.getItem("role") || "Viewer";
-
-  // Fetch assets
-  useEffect(() => {
-    async function fetchAssets() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/assets/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch assets");
-
-        const data = await response.json();
-        setAssets(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAssets();
-  }, []);
-
-  // Handle file upload
-  async function handleUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setUploading(true);
-
+  const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      const usersList = await getUsers();
+      setUsers(usersList);
+      
+      const total = usersList.length;
+      const active = usersList.filter(u => u.is_active).length;
+      const roles = usersList.reduce((acc, u) => {
+        acc[u.role] = (acc[u.role] || 0) + 1;
+        return acc;
+      }, {});
+      
+      setStats({
+        total,
+        active,
+        viewer: roles.viewer || 0,
+        editor: roles.editor || 0,
+        admin: roles.admin || 0
       });
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      const newAsset = await response.json();
-      setAssets(prev => [...prev, newAsset]);
     } catch (err) {
-      alert(err.message);
-    } finally {
-      setUploading(false);
+      console.error('Error fetching users:', err);
     }
-  }
-
-  // Modal functions
-  const openModal = (asset) => {
-    setSelectedAsset(asset);
-    setIsOpen(true);
-  };
-  const closeModal = () => {
-    setSelectedAsset(null);
-    setIsOpen(false);
   };
 
-  // Pagination & sorting
-  const sortedAssets = [...assets].sort((a, b) => {
-    if (sortBy === "name") return a.name.localeCompare(b.name);
-    if (sortBy === "created_at") return new Date(b.created_at) - new Date(a.created_at);
-    return 0;
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
 
-  const totalPages = Math.ceil(sortedAssets.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAssets = sortedAssets.slice(indexOfFirstItem, indexOfLastItem);
+    getProfile().then(data => {
+      setUser(data);
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+      if (data.role === 'admin') {
+        fetchUsers();
+      }
+    }).catch(err => {
+      console.error('Error fetching profile:', err);
+      router.push('/login');
+    });
+  }, [router]);
+
+  // Fetch assets for viewers (and others who browse)
+  const fetchAssets = async () => {
+    setAssetsLoading(true);
+    try {
+      const res = await getAssets();
+      const list = res.results || res;
+      setAssets(list);
+      setFilteredAssets(list);
+    } catch (err) {
+      console.error('Error fetching assets:', err);
+    } finally {
+      setAssetsLoading(false);
+    }
   };
 
-  // Loading state
-  if (loading) {
+  useEffect(() => {
+    if (!user) return;
+    // Fetch assets for any role that can view the gallery
+    fetchAssets();
+  }, [user]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
+  const handleCreateUser = async () => {
+    setLoading(true);
+    try {
+      await registerUser(newUser.username, newUser.email, newUser.password);
+      setIsModalOpen(false);
+      setNewUser({ username: '', email: '', password: '' });
+      fetchUsers();
+    } catch (err) {
+      console.error('Error creating user:', err);
+      alert('Failed to create user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+      await deleteUser(userId);
+      fetchUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user');
+    }
+  };
+
+  // Update user role and active status
+  const handleUpdateUser = async (userId, updates) => {
+    try {
+      await updateUserRole(userId, updates.role, updates.is_active);
+      fetchUsers();
+    } catch (err) {
+      console.error('Error updating user:', err);
+      alert('Failed to update user');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword) {
+      alert('Please enter a new password');
+      return;
+    }
+    try {
+      await resetPassword(resetPasswordUser.id, newPassword);
+      setResetPasswordUser(null);
+      setNewPassword('');
+      alert('Password reset successfully');
+      fetchUsers();
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      alert('Failed to reset password');
+    }
+  };
+
+  if (!user) {
     return (
-      <Box minH="100vh" display="flex" justifyContent="center" alignItems="center" bgGradient="linear(to-r, #74ebd5, #acb6e5)">
-        <Spinner size="xl" color="blue.500" />
-      </Box>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Box minH="100vh" display="flex" justifyContent="center" alignItems="center" bgGradient="linear(to-r, #74ebd5, #acb6e5)">
-        <Text color="red.500" fontSize="lg">Error: {error}</Text>
+      <Box p={8}>
+        <Text>Loading...</Text>
       </Box>
     );
   }
 
   return (
-    <Box minH="100vh" p={8} bgGradient="linear(to-r, #74ebd5, #acb6e5)">
-      <Heading mb={6} color="gray.800" fontFamily="Poppins">📁 Digital Asset Dashboard</Heading>
+    <Box p={8}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Box>
+          <Heading mb={2}>Welcome, {user.email}</Heading>
+          <Badge 
+            colorPalette={user.role === 'admin' ? 'purple' : user.role === 'editor' ? 'green' : 'blue'}
+            size="lg"
+          >
+            {user.role.toUpperCase()}
+          </Badge>
+        </Box>
+        <Button colorPalette="red" onClick={handleLogout}>
+          Logout
+        </Button>
+      </Flex>
 
-      <Text mb={4} fontSize="md" color="gray.700">
-        Logged in as: <b>{role}</b>
-      </Text>
+      
+      {user.role === 'admin' && (
+        <Box bg="purple.50" p={6} rounded="lg" mb={8}>
+          <Heading size="xl" mb={4}>Dashboard Stats</Heading>
+          <Grid templateColumns={{base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6} mb={8}>
+            <Stat label="Total Users" value={stats.total || 0} />
+            <Stat label="Active" value={stats.active || 0} />
+            <Stat label="Viewers" value={stats.viewer || 0} />
+            <Stat label="Editors" value={stats.editor || 0} />
+            <Stat label="Admins" value={stats.admin || 0} />
+          </Grid>
+          <Box bg="white" p={4} rounded="md" overflowX="auto">
+            <Flex justify="space-between" align="center" mb={6}>
+              <Heading size="xl" mb={4}>User Management</Heading>
+              <Button mt={4} colorPalette="purple" onClick={() => setIsModalOpen(true)}>
+                Create Users
+              </Button>
+            </Flex>
+            <Table.Root size="md" variant="simple">
+              <Table.Header>
+                <Table.Row bg="gray.50">
+                  <Table.ColumnHeader fontSize="md">Username</Table.ColumnHeader>
+                  <Table.ColumnHeader fontSize="md">Email</Table.ColumnHeader>
+                  <Table.ColumnHeader fontSize="md" textAlign="center">Role</Table.ColumnHeader>
+                  <Table.ColumnHeader fontSize="md" textAlign="center">Status</Table.ColumnHeader>
+                  <Table.ColumnHeader fontSize="md" textAlign="center">Actions</Table.ColumnHeader>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {users.map(u => (
+                  <Table.Row key={u.id} _hover={{ bg: "gray.50" }}>
+                    <Table.Cell fontSize="md" fontWeight="medium">{u.username}</Table.Cell>
+                    <Table.Cell fontSize="md">{u.email}</Table.Cell>
+                    <Table.Cell fontSize="md" textAlign={"center"}>
+                      <Badge 
+                        px={3} py={1.5} rounded="full" fontSize="sm" fontWeight="simple" textTransform="capitalize" letterSpacing="wide"
+                        colorPalette={
+                          u.role === "admin" ? "purple" :
+                          u.role === "editor" ? "green" :
+                          u.role === "viewer" ? "blue" :
+                          "gray"
+                        }
+                      >
+                        {u.role}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell textAlign={"center"}>
+                      <Badge px={3} py={1.5} rounded="full" fontSize="sm" fontWeight="simple" letterSpacing="wide" colorPalette={u.is_active ? "green" : "red"}>
+                        {u.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </Table.Cell> 
+                    <Table.Cell>
+                      <HStack spacing={3} justify="center">
+                        <Button leftIcon={<RotateCcw size={16} />} size="sm" variant="solid" colorPalette="gray" onClick={() => setResetPasswordUser(u)}>
+                          Reset Password
+                        </Button>
 
-      {/* Role-based instructions */}
-      {(role === "Admin" || role === "Editor") && (
-        <Box mb={8} p={6} border="2px dashed #3498db" borderRadius="2xl" textAlign="center" bg="whiteAlpha.800" _hover={{ bg: "whiteAlpha.900" }}>
-          <Text mb={3} fontWeight="semibold" color="gray.700">
-            Drag & Drop files here or click to upload
-          </Text>
-          <Input type="file" onChange={handleUpload} opacity={0} position="absolute" width="100%" height="100%" cursor="pointer" />
-          {uploading && <Text mt={2} color="blue.500" fontSize="sm">Uploading...</Text>}
+                        <Button leftIcon={<Edit3 size={16} />} size="sm" variant="solid" colorPalette="blue" onClick={() => setEditingUser(u)}>
+                          Edit
+                        </Button>
+
+                        <Button leftIcon={<Trash2 size={16} />} size="sm" colorPalette="red" variant="solid" onClick={() => handleDeleteUser(u.id)} disabled={u.id === user.id}>
+                          Delete
+                        </Button>
+                      </HStack>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+        </Box>
+        
+      )}
+
+    
+      {user.role === 'editor' && (
+        <Box bg="green.50" p={4} rounded="md" mb={4}>
+          <VStack align="start" spacing={2}>
+            <Text fontWeight="bold">Editor Access</Text>
+            <Text>You can upload, edit, and tag assets.</Text>
+            <Button colorPalette="green" onClick={() => router.push('/assets/upload')}>
+              Upload New Asset
+            </Button>
+          </VStack>
         </Box>
       )}
 
-      {role === "Admin" && (
-        <Box mb={6} p={4} bg="whiteAlpha.800" borderRadius="xl" boxShadow="md">
-          <Heading size="sm" mb={2}>Admin Controls</Heading>
-          <Text color="gray.600">You have full access to upload, delete, and manage assets.</Text>
-        </Box>
-      )}
+      
+      {user.role === 'viewer' && (
+        <Box mb={6}>
+          <Box bg="blue.50" p={4} rounded="md" mb={4}>
+            <VStack align="start" spacing={2}>
+              <Text fontWeight="bold">Viewer Access</Text>
+              <Text>You can view and download assets.</Text>
+              <Button onClick={() => router.push('/assets')}>Browse Gallery</Button>
+            </VStack>
+          </Box>
 
-      {role === "Editor" && (
-        <Box mb={6} p={4} bg="whiteAlpha.800" borderRadius="xl" boxShadow="md">
-          <Heading size="sm" mb={2}>Editor Tools</Heading>
-          <Text color="gray.600">You can upload and edit assets.</Text>
-        </Box>
-      )}
+          <Box mb={4}>
+            <SearchBar onSearch={(q) => {
+              if (!q || !q.trim()) return setFilteredAssets(assets);
+              const lower = q.toLowerCase();
+              setFilteredAssets(
+                assets.filter(a =>
+                  (a.name || '').toLowerCase().includes(lower) ||
+                  (a.tags && a.tags.some(t => (t.tag || '').toLowerCase().includes(lower)))
+                )
+              );
+            }} />
+          </Box>
 
-      {role === "Viewer" && (
-        <Box mb={6} p={4} bg="whiteAlpha.800" borderRadius="xl" boxShadow="md">
-          <Heading size="sm" mb={2}>Viewer Dashboard</Heading>
-          <Text color="gray.600">You can view assets but cannot upload or edit.</Text>
-        </Box>
-      )}
-
-      {/* Search */}
-      <Box mb={6}>
-        <Input
-          type="text"
-          placeholder="Search by name or tag..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          borderRadius="12px"
-          border="1px solid #ccc"
-          fontSize="16px"
-        />
-      </Box>
-
-      {/* Sort */}
-      <Box mb={4} display="flex" justifyContent="flex-end" alignItems="center">
-        <Text fontSize="sm" mr={2}>Sort by:</Text>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #ccc", outline: "none", cursor: "pointer" }}
-        >
-          <option value="created_at">Upload Date</option>
-          <option value="name">Name</option>
-        </select>
-      </Box>
-
-      {/* Assets grid */}
-      {currentAssets.length === 0 ? (
-        <Text color="gray.600" fontSize="lg">No assets found.</Text>
-      ) : (
-        <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={6}>
-          {currentAssets
-            .filter(asset => {
-              const query = searchQuery.toLowerCase();
-              return asset.name.toLowerCase().includes(query) || (asset.tags && asset.tags.some(tag => tag.toLowerCase().includes(query)));
-            })
-            .map(asset => (
-              <GridItem
-                key={asset.id}
-                bg="white"
-                borderRadius="2xl"
-                boxShadow="md"
-                p={4}
-                cursor="pointer"
-                transition="0.3s"
-                _hover={{ boxShadow: "xl", transform: "translateY(-4px)" }}
-                onClick={() => openModal(asset)}
-              >
-                {asset.preview_url ? (
-                  <Image src={asset.preview_url} alt={asset.name} borderRadius="xl" mb={3} />
-                ) : (
-                  <Box bg="gray.100" h="150px" borderRadius="xl" display="flex" alignItems="center" justifyContent="center">
-                    <Text color="gray.500">No Preview</Text>
-                  </Box>
-                )}
-                <Text fontWeight="bold" color="gray.800">{asset.name}</Text>
-                <Text fontSize="sm" color="gray.500">{new Date(asset.created_at).toLocaleDateString()}</Text>
-                <Box mt={2}>
-                  {asset.tags && asset.tags.map((tag, i) => (
-                    <Tag key={i} size="sm" colorScheme="blue" mr={1}>{tag}</Tag>
-                  ))}
-                </Box>
-              </GridItem>
-            ))}
-        </Grid>
-      )}
-
-      {/* Pagination */}
-      <Box mt={6} display="flex" justifyContent="center" alignItems="center">
-        <Button onClick={() => handlePageChange(currentPage - 1)} isDisabled={currentPage === 1} mr={2}>Prev</Button>
-        <Text mx={2} fontSize="sm">Page {currentPage} of {totalPages}</Text>
-        <Button onClick={() => handlePageChange(currentPage + 1)} isDisabled={currentPage === totalPages} ml={2}>Next</Button>
-      </Box>
-
-      {/* Asset Modal */}
-      <Modal isOpen={isOpen} onClose={closeModal} size="4xl" isCentered>
-        <ModalOverlay />
-        <ModalContent borderRadius="2xl" p={4}>
-          <ModalHeader>{selectedAsset?.name}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody display="flex" flexDir="column" alignItems="center">
-            {selectedAsset && selectedAsset.preview_url && (
-              <>
-                {selectedAsset.name.match(/\.(jpg|jpeg|png|gif)$/i) && (
-                  <Image src={selectedAsset.preview_url} alt={selectedAsset.name} maxH="60vh" borderRadius="lg" mb={3} />
-                )}
-                {selectedAsset.name.match(/\.(mp4|webm|ogg)$/i) && (
-                  <video src={selectedAsset.preview_url} controls style={{ maxHeight: "60vh", borderRadius: "12px", marginBottom: "12px" }} />
-                )}
-                {selectedAsset.name.match(/\.(pdf)$/i) && (
-                  <iframe src={selectedAsset.preview_url} width="100%" height="500px" style={{ borderRadius: "12px" }}></iframe>
-                )}
-              </>
-            )}
-            <Text fontSize="sm" color="gray.500" mt={2}>
-              Uploaded on: {selectedAsset && new Date(selectedAsset.created_at).toLocaleDateString()}
-            </Text>
-            <Box mt={3}>
-              {selectedAsset?.tags?.map((tag, i) => (
-                <Tag key={i} size="sm" colorScheme="blue" mr={1}>{tag}</Tag>
+          {assetsLoading ? (
+            <Center py={12}><Spinner size="lg" /></Center>
+          ) : filteredAssets.length === 0 ? (
+            <Center py={12}><Text color="gray.500">No assets found.</Text></Center>
+          ) : (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {filteredAssets.map(asset => (
+                <AssetCard key={asset.id} asset={asset} />
               ))}
-            </Box>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+            </SimpleGrid>
+          )}
+        </Box>
+      )}
+
+      <DialogRoot open={isModalOpen} onOpenChange={(e) => setIsModalOpen(e.open)}>
+        <DialogBackdrop/>
+        <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogCloseTrigger/>
+          </DialogHeader>
+          <DialogBody>
+            <VStack spacing={4}>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Username</Text>
+                <Input
+                  placeholder="Username"
+                  value={newUser.username}
+                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                />
+              </Box>
+              
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Email</Text>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                />
+              </Box>
+              
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Password</Text>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                />
+              </Box>
+              
+              {/* Role selection is not needed for register, backend always sets 'viewer' */}
+            </VStack>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button colorPalette="purple" onClick={handleCreateUser} loading={loading}>
+              Create User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
+
+      {/* Reset Password Modal */}
+      <DialogRoot open={!!resetPasswordUser} onOpenChange={(e) => setResetPasswordUser(e.open ? resetPasswordUser : null)}>
+        <DialogBackdrop/>
+        <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
+          <DialogHeader>
+            <DialogTitle>Reset Password for {resetPasswordUser?.username}</DialogTitle>
+            <DialogCloseTrigger/>
+          </DialogHeader>
+          <DialogBody>
+            <VStack spacing={4}>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">New Password</Text>
+                <Input
+                  type="password"
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </Box>
+            </VStack>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {setResetPasswordUser(null); setNewPassword('');}}>
+              Cancel
+            </Button>
+            <Button colorPalette="orange" onClick={handleResetPassword}>
+              Reset Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
+
+      {/* Edit User Modal */}
+      <DialogRoot open={!!editingUser} onOpenChange={(e) => setEditingUser(e.open ? editingUser : null)}>
+        <DialogBackdrop/>
+        <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
+          <DialogHeader>
+            <DialogTitle>Edit User - {editingUser?.username}</DialogTitle>
+            <DialogCloseTrigger/>
+          </DialogHeader>
+          <DialogBody>
+            <VStack spacing={4}>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Username</Text>
+                <Input
+                  value={editingUser?.username ?? ''}
+                  bg="gray.100"
+                  onChange={e => setEditingUser({ ...editingUser, username: e.target.value })}
+                />
+              </Box>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Email</Text>
+                <Input
+                  value={editingUser?.email ?? ''}
+                  bg="gray.100"
+                  onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
+                />
+              </Box>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Role</Text>
+                <HStack spacing={4} mt={2}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="editor"
+                      checked={editingUser?.role === "editor"}
+                      onChange={() => setEditingUser({ ...editingUser, role: "editor" })}
+                    />
+                    Editor
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="viewer"
+                      checked={editingUser?.role === "viewer"}
+                      onChange={() => setEditingUser({ ...editingUser, role: "viewer" })}
+                    />
+                    Viewer
+                  </label>
+                </HStack>
+              </Box>
+              <Box width="full">
+                <Text mb={1} fontSize="sm" fontWeight="medium">Active Status</Text>
+                <HStack spacing={4} mt={2}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="active"
+                      value="active"
+                      checked={editingUser?.is_active === true}
+                      onChange={() => setEditingUser({ ...editingUser, is_active: true })}
+                    />
+                    Active
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="active"
+                      value="inactive"
+                      checked={editingUser?.is_active === false}
+                      onChange={() => setEditingUser({ ...editingUser, is_active: false })}
+                    />
+                    Inactive
+                  </label>
+                </HStack>
+              </Box>
+            </VStack>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUser(null)}>
+              Cancel
+            </Button>
+            <Button colorPalette="blue" onClick={async () => {
+              if (editingUser?.role !== undefined && editingUser?.is_active !== undefined) {
+                await handleUpdateUser(editingUser.id, { role: editingUser.role, is_active: editingUser.is_active });
+                setEditingUser(null);
+              }
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </Box>
   );
 }
