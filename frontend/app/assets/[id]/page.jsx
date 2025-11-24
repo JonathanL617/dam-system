@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack, Table, Tbody, Tr, Td } from '@chakra-ui/react';
+import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack } from '@chakra-ui/react';
 import { Engine, Scene } from 'react-babylonjs';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { getAsset, updateAsset, deleteAsset } from '../../../lib/api_client';
+import { getAsset } from '../../../lib/api_client';
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -18,9 +18,9 @@ export default function AssetDetailPage() {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-      const userRole = localStorage.getItem('role');
-      setRole(userRole);
-    }, []);
+    const userRole = localStorage.getItem('role');
+    setRole(userRole);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -40,33 +40,6 @@ export default function AssetDetailPage() {
 
     return () => { mounted = false; };
   }, [id]);
-
-  const handleEdit = async () => {
-    try {
-      const newName = prompt('Enter new name for asset:', asset.name);
-      if (newName && newName !== asset.name) {
-        await updateAsset(asset.id, { name: newName });
-        // Refresh the page to show changes
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error('Edit failed:', error);
-      alert('Failed to update asset');
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${asset.name}"?`)) return;
-    
-    try {
-      await deleteAsset(asset.id);
-      // Redirect back to dashboard after deletion
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Delete failed:', error);
-      alert('Failed to delete asset');
-    }
-  };
 
   if (loading) return (
     <Center h="70vh"><Spinner size="xl" /></Center>
@@ -115,43 +88,29 @@ export default function AssetDetailPage() {
         </Box>
       )}
 
-      <HStack spacing={3} mb={4}>
+      <HStack spacing={3}>
         <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
-        
+
         {/* Show Edit and Delete buttons ONLY for editors */}
         {role === 'editor' && (
           <>
-            <Button colorPalette="blue" onClick={handleEdit}>
+            <Button colorPalette="blue" onClick={() => {/* TODO: Implement edit */ }}>
               Edit Asset
             </Button>
-            <Button colorPalette="red" variant="outline" onClick={handleDelete}>
+            <Button colorPalette="red" variant="outline" onClick={() => {/* TODO: Implement delete */ }}>
               Delete Asset
             </Button>
           </>
         )}
       </HStack>
 
-      <Box mb={8} p={5} borderWidth="1px" borderRadius="lg">
-        <Heading size="md" mb={4}>Details</Heading>
-        <Table variant="simple" size="sm">
-          <Tbody>
-            <Tr><Td fontWeight="bold" width="150px">Name</Td><Td>{asset.name}</Td></Tr>
-            <Tr><Td fontWeight="bold">File Size</Td><Td>{asset.file_size || '—'}</Td></Tr>
-            <Tr><Td fontWeight="bold">Dimensions</Td><Td>{asset.width && asset.height ? `${asset.width} x ${asset.height}` : '—'}</Td></Tr>
-            {asset.duration && (
-              <Tr><Td fontWeight="bold">Duration</Td><Td>{asset.duration.toFixed(2)}s</Td></Tr>
-            )}
-            {asset.metadata && asset.metadata.format && (
-              <Tr><Td fontWeight="bold">Format</Td><Td>{asset.metadata.format}</Td></Tr>
-            )}
-            {asset.metadata && asset.metadata.fps && (
-              <Tr><Td fontWeight="bold">FPS</Td><Td>{asset.metadata.fps.toFixed(2)}</Td></Tr>
-            )}
-            <Tr><Td fontWeight="bold">Uploaded</Td><Td>{new Date(asset.created_at || asset.created || '').toLocaleString()}</Td></Tr>
-            <Tr><Td fontWeight="bold">Uploaded By</Td><Td>{asset.uploaded_by || '—'}</Td></Tr>
-            <Tr><Td fontWeight="bold">Tags</Td><Td>{asset.tags && asset.tags.length ? asset.tags.map(t => t.tag).join(', ') : '—'}</Td></Tr>
-          </Tbody>
-        </Table>
+      <Box mb={4}>
+        <Heading size="md" mb={2}>Details</Heading>
+        <Text><strong>Name:</strong> {asset.name}</Text>
+        <Text><strong>File Size:</strong> {asset.file_size || '—'}</Text>
+        <Text><strong>Description:</strong> {asset.description || '—'}</Text>
+        <Text><strong>Uploaded:</strong> {new Date(asset.created_at || asset.created || '').toLocaleString()}</Text>
+        <Text><strong>Tags:</strong> {asset.tags && asset.tags.length ? asset.tags.map(t => t.tag).join(', ') : '—'}</Text>
       </Box>
     </Box>
   );
