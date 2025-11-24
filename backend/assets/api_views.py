@@ -460,3 +460,5 @@ def update_asset(request, asset_id):
         asset.asset_group.save()
     
     return Response({'success': True, 'message': 'Asset updated successfully'})
+
+    

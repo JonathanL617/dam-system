@@ -102,9 +102,6 @@ export const updateUserRole = (id, role, is_active) =>
 // -------------------------
 // ASSETS
 // -------------------------
-// -------------------------
-// ASSETS - ADD THIS FUNCTION
-// -------------------------
 export const updateAsset = (id, data) =>
   api(`/assets/${id}/update/`, {  // ← Add /update/
     method: 'PUT',
