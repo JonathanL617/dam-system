@@ -23,6 +23,7 @@ urlpatterns = [
     # Asset endpoints
     path('api/assets/', api_views.list_assets, name='list_assets'),
     path('api/assets/<int:asset_id>/', api_views.get_asset_detail, name='get_asset_detail'),
+    path('api/assets/<int:asset_id>/download/', api_views.download_asset, name='download_asset'),
     path('api/assets/<int:asset_id>/update/', api_views.update_asset, name='update_asset'),
     path('api/assets/<int:asset_id>/delete/', api_views.delete_asset, name='delete_asset'),
     path('api/assets/<int:asset_id>/tags/', api_views.manage_asset_tags, name='manage_asset_tags'),

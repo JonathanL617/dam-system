@@ -1,11 +1,12 @@
 # assets/api_views.py
+from django.http import FileResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, AllowAny
 from rest_framework.authentication import BaseAuthentication
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from assets.models import User, AuthToken, Asset, AssetGroup
+from assets.models import User, AuthToken, Asset, AssetGroup, ActivityLog, ActivityLog
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework import exceptions
@@ -442,12 +443,50 @@ def get_asset_detail(request, asset_id):
                 'height': asset.height,
                 'duration': asset.duration,
                 'metadata': asset.metadata_json,
+                'versions': [{
+                    'id': v.id,
+                    'version_number': v.version_number,
+                    'created_at': v.uploaded_at,
+                    'uploaded_by': v.uploaded_by,
+                    'file_size': v.get_file_size_display(),
+                    'change_notes': v.change_notes,
+                    'url': v.web_version_path or v.file_path,
+                    'is_current': v.id == asset.id
+                } for v in asset.asset_group.versions.filter(is_active=True).order_by('-version_number')]
             })
     except Asset.DoesNotExist:
         return Response({'error': 'Asset not found'}, status=404)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def download_asset(request, asset_id):
+    try:
+        asset = Asset.objects.get(id=asset_id)
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=404)
 
-# -----------------------------
+    # Log activity
+    user = request.user if request.user.is_authenticated else None
+    ActivityLog.objects.create(
+        user=user,
+        action='download',
+        asset_group=asset.asset_group,
+        asset_version=asset,
+        details=f"Downloaded version {asset.version_number}"
+    )
+
+    # Construct full path
+    # asset.file_path is like "/media/assets/filename.ext"
+    relative_path = asset.file_path.lstrip('/')
+    if relative_path.startswith('media/'):
+        relative_path = relative_path.replace('media/', '', 1)
+    
+    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+    
+    if not os.path.exists(full_path):
+         return Response({'error': 'File not found on server'}, status=404)
+         
+    return FileResponse(open(full_path, 'rb'), as_attachment=True, filename=asset.filename)
 # ASSETS: DELETE ASSET
 # -----------------------------
 @api_view(['DELETE'])
