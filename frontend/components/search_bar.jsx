@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Input, InputGroup } from '@chakra-ui/react';
+import { Input, InputGroup, Box } from '@chakra-ui/react';
 import { Search } from 'react-feather';
 
 export default function SearchBar({ onSearch, placeholder = 'Search assets...' }) {

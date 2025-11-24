@@ -118,6 +118,15 @@ export const uploadAssetVersion = (groupId, file, changeNotes = '') => {
   formData.append('change_notes', changeNotes);
   return api(`/assets/${groupId}/upload-version/`, { method: 'POST', body: formData });
 };
+
+export const createAndUploadAsset = (name, file, changeNotes = 'Initial upload') => {
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('file', file);
+  formData.append('change_notes', changeNotes);
+  return api('/assets/upload/', { method: 'POST', body: formData });
+};
+
 export const deleteAsset = (id) => api(`/assets/${id}/`, { method: 'DELETE' });
 export const searchAssets = (query) =>
   api(`/assets/search/?q=${encodeURIComponent(query)}`);

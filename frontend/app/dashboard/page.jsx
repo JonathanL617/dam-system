@@ -48,14 +48,14 @@ export default function Dashboard() {
     try {
       const usersList = await getUsers();
       setUsers(usersList);
-      
+
       const total = usersList.length;
       const active = usersList.filter(u => u.is_active).length;
       const roles = usersList.reduce((acc, u) => {
         acc[u.role] = (acc[u.role] || 0) + 1;
         return acc;
       }, {});
-      
+
       setStats({
         total,
         active,
@@ -70,7 +70,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
@@ -91,15 +91,24 @@ export default function Dashboard() {
 
   // Fetch assets for viewers (and others who browse)
   const fetchAssets = async () => {
+    console.log('fetchAssets called');
     setAssetsLoading(true);
     try {
       const res = await getAssets();
+      console.log('Assets response:', res);
       const list = res.results || res;
+      console.log('Assets list:', list);
       setAssets(list);
       setFilteredAssets(list);
-    } catch (err) {
+    } 
+    catch (err) {
       console.error('Error fetching assets:', err);
-    } finally {
+      console.error('Error details:', err.message);
+      // Set empty arrays so UI doesn't break
+      setAssets([]);
+      setFilteredAssets([]);
+    } 
+    finally {
       setAssetsLoading(false);
     }
   };
@@ -135,7 +144,7 @@ export default function Dashboard() {
 
   const handleDeleteUser = async (userId) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
-    
+
     try {
       await deleteUser(userId);
       fetchUsers();
@@ -186,7 +195,7 @@ export default function Dashboard() {
       <Flex justify="space-between" align="center" mb={6}>
         <Box>
           <Heading mb={2}>Welcome, {user.email}</Heading>
-          <Badge 
+          <Badge
             colorPalette={user.role === 'admin' ? 'purple' : user.role === 'editor' ? 'green' : 'blue'}
             size="lg"
           >
@@ -198,11 +207,11 @@ export default function Dashboard() {
         </Button>
       </Flex>
 
-      
+
       {user.role === 'admin' && (
         <Box bg="purple.50" p={6} rounded="lg" mb={8}>
           <Heading size="xl" mb={4}>Dashboard Stats</Heading>
-          <Grid templateColumns={{base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6} mb={8}>
+          <Grid templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' }} gap={6} mb={8}>
             <Stat label="Total Users" value={stats.total || 0} />
             <Stat label="Active" value={stats.active || 0} />
             <Stat label="Viewers" value={stats.viewer || 0} />
@@ -232,13 +241,13 @@ export default function Dashboard() {
                     <Table.Cell fontSize="md" fontWeight="medium">{u.username}</Table.Cell>
                     <Table.Cell fontSize="md">{u.email}</Table.Cell>
                     <Table.Cell fontSize="md" textAlign={"center"}>
-                      <Badge 
+                      <Badge
                         px={3} py={1.5} rounded="full" fontSize="sm" fontWeight="simple" textTransform="capitalize" letterSpacing="wide"
                         colorPalette={
                           u.role === "admin" ? "purple" :
-                          u.role === "editor" ? "green" :
-                          u.role === "viewer" ? "blue" :
-                          "gray"
+                            u.role === "editor" ? "green" :
+                              u.role === "viewer" ? "blue" :
+                                "gray"
                         }
                       >
                         {u.role}
@@ -248,7 +257,7 @@ export default function Dashboard() {
                       <Badge px={3} py={1.5} rounded="full" fontSize="sm" fontWeight="simple" letterSpacing="wide" colorPalette={u.is_active ? "green" : "red"}>
                         {u.is_active ? "Active" : "Inactive"}
                       </Badge>
-                    </Table.Cell> 
+                    </Table.Cell>
                     <Table.Cell>
                       <HStack spacing={3} justify="center">
                         <Button leftIcon={<RotateCcw size={16} />} size="sm" variant="solid" colorPalette="gray" onClick={() => setResetPasswordUser(u)}>
@@ -270,23 +279,50 @@ export default function Dashboard() {
             </Table.Root>
           </Box>
         </Box>
-        
+
       )}
 
-    
+
       {user.role === 'editor' && (
-        <Box bg="green.50" p={4} rounded="md" mb={4}>
-          <VStack align="start" spacing={2}>
-            <Text fontWeight="bold">Editor Access</Text>
-            <Text>You can upload, edit, and tag assets.</Text>
-            <Button colorPalette="green" onClick={() => router.push('/assets/upload')}>
-              Upload New Asset
-            </Button>
-          </VStack>
+        <Box mb={6}>
+          <Box bg="green.50" p={4} rounded="md" mb={4}>
+            <VStack align="start" spacing={2}>
+              <Text fontWeight="bold">Editor Access</Text>
+              <Text>You can upload, edit, and tag assets.</Text>
+              <Button colorPalette="green" onClick={() => router.push('/assets/upload')}>
+                Upload New Asset
+              </Button>
+            </VStack>
+          </Box>
+
+          <Box mb={4}>
+            <SearchBar onSearch={(q) => {
+              if (!q || !q.trim()) return setFilteredAssets(assets);
+              const lower = q.toLowerCase();
+              setFilteredAssets(
+                assets.filter(a =>
+                  (a.name || '').toLowerCase().includes(lower) ||
+                  (a.tags && a.tags.some(t => (t.tag || '').toLowerCase().includes(lower)))
+                )
+              );
+            }} />
+          </Box>
+
+          {assetsLoading ? (
+            <Center py={12}><Spinner size="lg" /></Center>
+          ) : filteredAssets.length === 0 ? (
+            <Center py={12}><Text color="gray.500">No assets found.</Text></Center>
+          ) : (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {filteredAssets.map(asset => (
+                <AssetCard key={asset.id} asset={asset} canEdit={true} />
+              ))}
+            </SimpleGrid>
+          )}
         </Box>
       )}
 
-      
+
       {user.role === 'viewer' && (
         <Box mb={6}>
           <Box bg="blue.50" p={4} rounded="md" mb={4}>
@@ -325,11 +361,11 @@ export default function Dashboard() {
       )}
 
       <DialogRoot open={isModalOpen} onOpenChange={(e) => setIsModalOpen(e.open)}>
-        <DialogBackdrop/>
+        <DialogBackdrop />
         <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
           <DialogHeader>
             <DialogTitle>Create New User</DialogTitle>
-            <DialogCloseTrigger/>
+            <DialogCloseTrigger />
           </DialogHeader>
           <DialogBody>
             <VStack spacing={4}>
@@ -338,30 +374,30 @@ export default function Dashboard() {
                 <Input
                   placeholder="Username"
                   value={newUser.username}
-                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                 />
               </Box>
-              
+
               <Box width="full">
                 <Text mb={1} fontSize="sm" fontWeight="medium">Email</Text>
                 <Input
                   type="email"
                   placeholder="Email"
                   value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                 />
               </Box>
-              
+
               <Box width="full">
                 <Text mb={1} fontSize="sm" fontWeight="medium">Password</Text>
                 <Input
                   type="password"
                   placeholder="Password"
                   value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                 />
               </Box>
-              
+
               {/* Role selection is not needed for register, backend always sets 'viewer' */}
             </VStack>
           </DialogBody>
@@ -378,11 +414,11 @@ export default function Dashboard() {
 
       {/* Reset Password Modal */}
       <DialogRoot open={!!resetPasswordUser} onOpenChange={(e) => setResetPasswordUser(e.open ? resetPasswordUser : null)}>
-        <DialogBackdrop/>
+        <DialogBackdrop />
         <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
           <DialogHeader>
             <DialogTitle>Reset Password for {resetPasswordUser?.username}</DialogTitle>
-            <DialogCloseTrigger/>
+            <DialogCloseTrigger />
           </DialogHeader>
           <DialogBody>
             <VStack spacing={4}>
@@ -398,7 +434,7 @@ export default function Dashboard() {
             </VStack>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {setResetPasswordUser(null); setNewPassword('');}}>
+            <Button variant="outline" onClick={() => { setResetPasswordUser(null); setNewPassword(''); }}>
               Cancel
             </Button>
             <Button colorPalette="orange" onClick={handleResetPassword}>
@@ -410,11 +446,11 @@ export default function Dashboard() {
 
       {/* Edit User Modal */}
       <DialogRoot open={!!editingUser} onOpenChange={(e) => setEditingUser(e.open ? editingUser : null)}>
-        <DialogBackdrop/>
+        <DialogBackdrop />
         <DialogContent maxW="md" position="fixed" top="50%" left="50%" transform="translate(-50%, -50%)" mx="auto" my="auto">
           <DialogHeader>
             <DialogTitle>Edit User - {editingUser?.username}</DialogTitle>
-            <DialogCloseTrigger/>
+            <DialogCloseTrigger />
           </DialogHeader>
           <DialogBody>
             <VStack spacing={4}>

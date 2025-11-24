@@ -17,6 +17,11 @@ class IsCustomAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user and hasattr(request.user, 'role') and request.user.role == 'admin'
 
+class IsEditorOrAdmin(BasePermission):
+    """Permission class that allows both editors and admins"""
+    def has_permission(self, request, view):
+        return request.user and hasattr(request.user, 'role') and request.user.role in ['editor', 'admin']
+
 # -----------------------------
 # Custom AuthToken Authentication
 # -----------------------------
@@ -216,7 +221,7 @@ def list_assets(request):
 
 @api_view(['POST'])
 @authentication_classes([AuthTokenAuthentication])
-@permission_classes([IsCustomAdmin]) # Only editors/admins can upload
+@permission_classes([IsCustomAdmin]) # Only editors can upload
 def create_asset_group(request):
     name = request.data.get('name')
     asset_type = request.data.get('asset_type')
@@ -290,7 +295,7 @@ def upload_asset_version(request, group_id):
 
 @api_view(['POST'])
 @authentication_classes([AuthTokenAuthentication])
-@permission_classes([IsCustomAdmin])
+@permission_classes([IsEditorOrAdmin])
 def create_and_upload_asset(request):
     name = request.data.get('name')
     file = request.FILES.get('file')
