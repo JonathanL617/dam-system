@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack } from '@chakra-ui/react';
 import { Engine, Scene } from 'react-babylonjs';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { getAsset } from '../../../lib/api_client';
+import { getAsset, updateAsset, deleteAsset } from '../../../lib/api_client';
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -18,9 +18,9 @@ export default function AssetDetailPage() {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-  const userRole = localStorage.getItem('role');
-  setRole(userRole);
-}, []);
+    const userRole = localStorage.getItem('role');
+    setRole(userRole);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +40,33 @@ export default function AssetDetailPage() {
 
     return () => { mounted = false; };
   }, [id]);
+
+  const handleEdit = async () => {
+    try {
+      const newName = prompt('Enter new name for asset:', asset.name);
+      if (newName && newName !== asset.name) {
+        await updateAsset(asset.id, { name: newName });
+        // Refresh the page to show changes
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Edit failed:', error);
+      alert('Failed to update asset');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${asset.name}"?`)) return;
+    
+    try {
+      await deleteAsset(asset.id);
+      // Redirect back to dashboard after deletion
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Failed to delete asset');
+    }
+  };
 
   if (loading) return (
     <Center h="70vh"><Spinner size="xl" /></Center>
@@ -88,16 +115,16 @@ export default function AssetDetailPage() {
         </Box>
       )}
 
-      <HStack spacing={3}>
+      <HStack spacing={3} mb={4}>
         <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
         
         {/* Show Edit and Delete buttons ONLY for editors */}
         {role === 'editor' && (
           <>
-            <Button colorPalette="blue" onClick={() => {/* TODO: Implement edit */}}>
+            <Button colorPalette="blue" onClick={handleEdit}>
               Edit Asset
             </Button>
-            <Button colorPalette="red" variant="outline" onClick={() => {/* TODO: Implement delete */}}>
+            <Button colorPalette="red" variant="outline" onClick={handleDelete}>
               Delete Asset
             </Button>
           </>

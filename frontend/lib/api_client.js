@@ -102,6 +102,18 @@ export const updateUserRole = (id, role, is_active) =>
 // -------------------------
 // ASSETS
 // -------------------------
+// -------------------------
+// ASSETS - ADD THIS FUNCTION
+// -------------------------
+export const updateAsset = (id, data) =>
+  api(`/assets/${id}/update/`, {  // ← Add /update/
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+
+export const deleteAsset = (id) => 
+  api(`/assets/${id}/delete/`, { method: 'DELETE' });  // ← Add /delete/
+
 export const getAssets = (params = {}) => {
   const query = new URLSearchParams(params).toString();
   return api(`/assets${query ? '?' + query : ''}`);
@@ -127,7 +139,7 @@ export const createAndUploadAsset = (name, file, changeNotes = 'Initial upload')
   return api('/assets/upload/', { method: 'POST', body: formData });
 };
 
-export const deleteAsset = (id) => api(`/assets/${id}/`, { method: 'DELETE' });
+
 export const searchAssets = (query) =>
   api(`/assets/search/?q=${encodeURIComponent(query)}`);
 export const filterAssets = (filters) => {
@@ -138,3 +150,4 @@ export const addTags = (assetId, tags) =>
   api(`/assets/${assetId}/tags/`, { method: 'POST', body: JSON.stringify({ tags }) });
 export const removeTags = (assetId, tags) =>
   api(`/assets/${assetId}/tags/`, { method: 'DELETE', body: JSON.stringify({ tags }) });
+

@@ -408,6 +408,7 @@ def get_asset_detail(request, asset_id):
                 'type': asset.asset_group.asset_type,
                 'url': asset.web_version_path or asset.file_path,
                 'thumbnail': asset.thumbnail_path,
+                'description': '',
                 'tags': [{'tag': t.tag} for t in asset.asset_group.tags.all()],
                 'uploaded_at': asset.uploaded_at,
                 'created_at': asset.asset_group.created_at,
@@ -417,3 +418,45 @@ def get_asset_detail(request, asset_id):
             })
     except Asset.DoesNotExist:
         return Response({'error': 'Asset not found'}, status=404)
+
+
+# -----------------------------
+# ASSETS: DELETE ASSET
+# -----------------------------
+@api_view(['DELETE'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsEditorOrAdmin])
+def delete_asset(request, asset_id):
+    try:
+        asset = Asset.objects.get(id=asset_id)
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=404)
+    
+    # Soft delete by setting is_active=False
+    asset.is_active = False
+    asset.save()
+    
+    # Or hard delete:
+    # asset.delete()
+    
+    return Response({'success': True, 'message': 'Asset deleted successfully'})
+
+# -----------------------------
+# ASSETS: UPDATE ASSET
+# -----------------------------
+@api_view(['PUT'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsEditorOrAdmin])
+def update_asset(request, asset_id):
+    try:
+        asset = Asset.objects.get(id=asset_id)
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=404)
+    
+    name = request.data.get('name')
+    if name:
+        # Update the asset group name
+        asset.asset_group.name = name
+        asset.asset_group.save()
+    
+    return Response({'success': True, 'message': 'Asset updated successfully'})
