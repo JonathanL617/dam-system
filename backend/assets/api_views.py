@@ -196,6 +196,7 @@ def user_dashboard(request):
 # ASSETS: LIST
 # -----------------------------
 @api_view(['GET', 'POST'])
+@authentication_classes([])
 @permission_classes([AllowAny])
 def list_assets(request):
     if request.method == 'POST':

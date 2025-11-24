@@ -26,20 +26,6 @@ export const api = async (endpoint, options = {}) => {
     headers['Authorization'] = `Token ${token}`;
   }
 
-  export const updateAsset = (id, assetData) =>
-  api(`/assets/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(assetData)
-  });
-
-  export const updateAssetPartial = (id, updates) =>
-  api(`/assets/${id}/`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates)
-  });
-
-  export const getAssetVersions = (assetId) => api(`/assets/${assetId}/versions/`);
-
   const fullUrl = `${API_URL}${endpoint}`;
   console.log('Fetching URL:', fullUrl); // debug
 
