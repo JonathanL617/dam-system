@@ -1,66 +1,126 @@
 import { Box, Text, Image, Button, HStack } from '@chakra-ui/react';
 import { useState } from 'react';
-import AssetPreview from '../AssetPreview';
+import AssetPreview from './AssetPreview';
 import { useRouter } from 'next/navigation';
 
 export default function AssetCard({ asset, onOpen }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-
-
   return (
     <>
       <Box
-        bg="gray.100"
-        borderWidth="1px"
-        borderColor="gray.300"
-        borderRadius="md"
-        p={3}
-        mb={3}
+        bg="blue.50"
+        borderRadius="lg"
+        overflow="hidden"
         cursor="pointer"
-        color="gray.800"
-        _dark={{
-          bg: "gray.700",
-          borderColor: "gray.600",
-          color: "gray.100"
-        }}
+        transition="all 0.2s"
+        boxShadow="sm"
         _hover={{
-          bg: "gray.200",
-          _dark: { bg: "gray.600" }
+          boxShadow: "md",
+          transform: "translateY(-2px)",
+        }}
+        _dark={{
+          bg: "gray.800",
+          _hover: {
+            boxShadow: "lg"
+          }
         }}
         onClick={() => {
           if (onOpen) return onOpen(asset);
           return setOpen(true);
         }}
       >
-        <Text fontWeight="bold" mb={2}>
-          {asset.name}
-        </Text>
+        <Box p={4}>
+          <Text fontWeight="bold" mb={3} fontSize="lg" color="gray.800" _dark={{ color: "gray.100" }}>
+            {asset.name}
+          </Text>
 
-        {asset.type === 'image' && (
-          <Image
-            src={`http://localhost:8000${asset.url}`}
-            alt={asset.name}
-            borderRadius="md"
-            maxH="150px"
-            objectFit="cover"
-          />
-        )}
+          {asset.type === 'image' && (
+            <Image
+              src={`http://localhost:8000${asset.url}`}
+              alt={asset.name}
+              borderRadius="md"
+              w="full"
+              h="200px"
+              objectFit="cover"
+              mb={3}
+            />
+          )}
 
+          {asset.type === 'video' && (
+            asset.thumbnail ? (
+              <Image
+                src={`http://localhost:8000${asset.thumbnail}`}
+                alt={asset.name}
+                borderRadius="md"
+                w="full"
+                h="200px"
+                objectFit="cover"
+                mb={3}
+              />
+            ) : (
+              <Box 
+                h="200px" 
+                bg="gray.200" 
+                borderRadius="md" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+                mb={3}
+              >
+                <Text fontSize="4xl">🎥</Text>
+              </Box>
+            )
+          )}
+          
+          {asset.type === '3d' && (
+            asset.thumbnail ? (
+              <Image
+                src={`http://localhost:8000${asset.thumbnail}`}
+                alt={asset.name}
+                borderRadius="md"
+                w="full"
+                h="200px"
+                objectFit="cover"
+                mb={3}
+              />
+            ) : (
+              <Box 
+                h="200px" 
+                bg="gray.200" 
+                borderRadius="md" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+                mb={3}
+              >
+                <Text fontSize="4xl">🧊</Text>
+              </Box>
+            )
+          )}
 
-        {asset.type === 'video' && <Text>🎥 Video File</Text>}
-        {asset.type === '3d' && <Text>🧊 3D Model</Text>}
+          <HStack spacing={2} mt={3}>
+            <Button
+              size="sm"
+              colorPalette="black"
+              flex={1}
+              onClick={(e) => { e.stopPropagation(); if (onOpen) return onOpen(asset); setOpen(true); }}
+            >
+              Preview
+            </Button>
 
-        <HStack spacing={3} mt={3}>
-          <Button size="sm" onClick={(e) => { e.stopPropagation(); if (onOpen) return onOpen(asset); setOpen(true); }}>
-            Preview
-          </Button>
-
-          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); router.push(`/assets/${asset.id}`); }}>
-            Details
-          </Button>
-        </HStack>
+            <Button
+              size="sm"
+              
+              colorPalette="black"
+              flex={1}
+              onClick={(e) => { e.stopPropagation(); router.push(`/assets/${asset.id}`); }}
+            >
+              Details
+            </Button>
+          </HStack>
+        </Box>
       </Box>
 
       {/* Render internal preview only when no external onOpen handler provided */}

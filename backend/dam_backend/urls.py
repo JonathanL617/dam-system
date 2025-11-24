@@ -36,6 +36,7 @@ urlpatterns = [
     
     # Asset endpoints
     path('api/assets/', api_views.list_assets, name='list_assets'),
+    path('api/assets/<int:asset_id>/', api_views.get_asset_detail, name='get_asset_detail'),
     path('api/assets/<int:group_id>/upload_version/', api_views.upload_asset_version, name='upload_asset_version'),
     path('api/assets/upload/', api_views.create_and_upload_asset, name='create_and_upload_asset'),
 ]

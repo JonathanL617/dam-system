@@ -43,7 +43,7 @@ export default function AssetUploadPage() {
     <Box maxW="2xl" mx="auto" p={8}>
       <Button
         leftIcon={<ArrowLeft size={16} />}
-        variant="ghost"
+        colorPalette={"black"}
         mb={4}
         onClick={() => router.back()}
       >

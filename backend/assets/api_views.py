@@ -10,6 +10,11 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework import exceptions
 
+from PIL import Image
+import cv2
+import os
+from django.conf import settings
+
 # -----------------------------
 # Custom Admin Permission
 # -----------------------------
@@ -338,9 +343,36 @@ def create_and_upload_asset(request):
     from django.conf import settings
     from django.core.files.storage import default_storage
     from django.core.files.base import ContentFile
-    
+
     filename = f"{group.name}_v1{ext}"
     path = default_storage.save(f"assets/{filename}", ContentFile(file.read()))
+
+    thumbnail_path = None
+    try:
+        if asset_type == 'image':
+            # Generate image thumbnail
+            img = Image.open(default_storage.path(path))
+            img.thumbnail((400, 400))
+            thumb_filename = f"{group.name}_v1_thumb.jpg"
+            thumb_path = f"assets/thumbnails/{thumb_filename}"
+            os.makedirs(os.path.join(settings.MEDIA_ROOT, 'assets', 'thumbnails'), exist_ok=True)
+            img.save(default_storage.path(thumb_path), 'JPEG')
+            thumbnail_path = f"/media/{thumb_path}"
+        
+        elif asset_type == 'video':
+            # Generate video thumbnail (first frame)
+            video_path = default_storage.path(path)
+            vidcap = cv2.VideoCapture(video_path)
+            success, image = vidcap.read()
+            if success:
+                thumb_filename = f"{group.name}_v1_thumb.jpg"
+                thumb_path = f"assets/thumbnails/{thumb_filename}"
+                os.makedirs(os.path.join(settings.MEDIA_ROOT, 'assets', 'thumbnails'), exist_ok=True)
+                cv2.imwrite(default_storage.path(thumb_path), image)
+                thumbnail_path = f"/media/{thumb_path}"
+            vidcap.release()
+    except Exception as e:
+        print(f"Failed to generate thumbnail: {e}")
     
     asset = Asset.objects.create(
         asset_group=group,
@@ -349,6 +381,7 @@ def create_and_upload_asset(request):
         file_path=f"/media/{path}",
         file_size=file.size,
         file_type=ext.replace('.', ''),
+        thumbnail_path=thumbnail_path,  # ← Add this line
         uploaded_by=request.user.username,
         change_notes=change_notes
     )
@@ -357,3 +390,28 @@ def create_and_upload_asset(request):
     group.save()
     
     return Response({'success': True, 'id': group.id})
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def get_asset_detail(request, asset_id):
+    """Get details of a single asset"""
+    try:
+        asset = Asset.objects.select_related('asset_group').get(id=asset_id, is_active=True)
+            
+        return Response({
+                'id': asset.id,
+                'name': asset.asset_group.name,
+                'type': asset.asset_group.asset_type,
+                'url': asset.web_version_path or asset.file_path,
+                'thumbnail': asset.thumbnail_path,
+                'description': asset.asset_group.description,
+                'tags': [{'tag': t.tag} for t in asset.asset_group.tags.all()],
+                'uploaded_at': asset.uploaded_at,
+                'created_at': asset.asset_group.created_at,
+                'file_size': asset.get_file_size_display(),
+                'version_number': asset.version_number,
+                'uploaded_by': asset.uploaded_by,
+            })
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=404)

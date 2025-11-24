@@ -313,7 +313,7 @@ export default function Dashboard() {
           ) : filteredAssets.length === 0 ? (
             <Center py={12}><Text color="gray.500">No assets found.</Text></Center>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={8}>
               {filteredAssets.map(asset => (
                 <AssetCard key={asset.id} asset={asset} canEdit={true} />
               ))}
@@ -351,7 +351,7 @@ export default function Dashboard() {
           ) : filteredAssets.length === 0 ? (
             <Center py={12}><Text color="gray.500">No assets found.</Text></Center>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={8}>
               {filteredAssets.map(asset => (
                 <AssetCard key={asset.id} asset={asset} />
               ))}

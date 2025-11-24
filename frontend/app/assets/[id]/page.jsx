@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge } from '@chakra-ui/react';
+import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack } from '@chakra-ui/react';
 import { Engine, Scene } from 'react-babylonjs';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { getAsset } from '../../../lib/api_client';
@@ -15,6 +15,12 @@ export default function AssetDetailPage() {
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+  const userRole = localStorage.getItem('role');
+  setRole(userRole);
+}, []);
 
   useEffect(() => {
     if (!id) return;
@@ -36,13 +42,13 @@ export default function AssetDetailPage() {
   }, [id]);
 
   if (loading) return (
-    <Center h="70vh"><Spinner size="xl"/></Center>
+    <Center h="70vh"><Spinner size="xl" /></Center>
   );
 
   if (error) return (
     <Center h="70vh"><VStack>
       <Text color="red.500">{error}</Text>
-      <Button onClick={() => router.push('/assets')}>Back to Gallery</Button>
+      <Button onClick={() => router.push('/dashboard')}>Back to Gallery</Button>
     </VStack></Center>
   );
 
@@ -56,12 +62,12 @@ export default function AssetDetailPage() {
       <Badge mb={2} colorScheme="gray">{asset.type}</Badge>
 
       {asset.type === 'image' && (
-        <Image src={asset.url} alt={asset.name} borderRadius="md" mb={4} width="100%" />
+        <Image src={`http://localhost:8000${asset.url}`} alt={asset.name} borderRadius="md" mb={4} width="100%" />
       )}
 
       {asset.type === 'video' && (
         <Box mb={4}>
-          <video src={asset.url} controls style={{ width: '100%', borderRadius: 8 }} />
+          <video src={`http://localhost:8000${asset.url}`} controls style={{ width: '100%', borderRadius: 8 }} />
         </Box>
       )}
 
@@ -82,6 +88,22 @@ export default function AssetDetailPage() {
         </Box>
       )}
 
+      <HStack spacing={3}>
+        <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
+        
+        {/* Show Edit and Delete buttons ONLY for editors */}
+        {role === 'editor' && (
+          <>
+            <Button colorPalette="blue" onClick={() => {/* TODO: Implement edit */}}>
+              Edit Asset
+            </Button>
+            <Button colorPalette="red" variant="outline" onClick={() => {/* TODO: Implement delete */}}>
+              Delete Asset
+            </Button>
+          </>
+        )}
+      </HStack>
+      
       <Box mb={4}>
         <Heading size="md" mb={2}>Details</Heading>
         <Text><strong>Name:</strong> {asset.name}</Text>
@@ -90,7 +112,7 @@ export default function AssetDetailPage() {
         <Text><strong>Tags:</strong> {asset.tags && asset.tags.length ? asset.tags.map(t => t.tag).join(', ') : '—'}</Text>
       </Box>
 
-      <Button onClick={() => router.push('/assets')}>Back to Gallery</Button>
+      <Button onClick={() => router.push('/dashboard')}>Back to Gallery</Button>
     </Box>
   );
 }
