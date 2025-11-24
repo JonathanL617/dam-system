@@ -18,25 +18,35 @@ export default function AssetUploadPage() {
     if (!file || !name) return;
 
     setLoading(true);
+    setError('');
     const token = localStorage.getItem('token');
     const form = new FormData();
     form.append('name', name);
     form.append('file', file);
     form.append('change_notes', 'Initial upload from frontend');
 
-    const res = await fetch('http://localhost:8000/api/assets/upload/', {
-      method: 'POST',
-      headers: { 'Authorization': `Token ${token}` },
-      body: form
-    });
+    try {
+      const res = await fetch('http://localhost:8000/api/assets/upload/', {
+        method: 'POST',
+        headers: { 'Authorization': `Token ${token}` },
+        body: form
+      });
 
-    if (res.ok) {
-      router.push('/assets');
-    } else {
-      const data = await res.json();
-      setError(data.error || 'Upload failed');
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Upload successful:', data);
+        router.push('/dashboard');
+      } else {
+        const data = await res.json();
+        console.error('Upload failed:', data);
+        setError(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError('Network error: ' + err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

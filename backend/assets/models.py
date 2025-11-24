@@ -92,7 +92,7 @@ class Asset(models.Model):
     metadata_json = models.JSONField(null=True, blank=True)
     
     # Thumbnail/Web versions
-    thumbnail_path = models.TextField(blank=True)
+    thumbnail_path = models.TextField(blank=True, null=True)  # ← Added null=True
     web_version_path = models.TextField(blank=True)
     
     # Version tracking

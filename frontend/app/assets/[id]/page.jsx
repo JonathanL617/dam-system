@@ -111,8 +111,6 @@ export default function AssetDetailPage() {
         <Text><strong>Uploaded:</strong> {new Date(asset.created_at || asset.created || '').toLocaleString()}</Text>
         <Text><strong>Tags:</strong> {asset.tags && asset.tags.length ? asset.tags.map(t => t.tag).join(', ') : '—'}</Text>
       </Box>
-
-      <Button onClick={() => router.push('/dashboard')}>Back to Gallery</Button>
     </Box>
   );
 }

@@ -347,11 +347,14 @@ def create_and_upload_asset(request):
     filename = f"{group.name}_v1{ext}"
     path = default_storage.save(f"assets/{filename}", ContentFile(file.read()))
 
-    thumbnail_path = None
+    thumbnail_path = ''
     try:
         if asset_type == 'image':
             # Generate image thumbnail
             img = Image.open(default_storage.path(path))
+            # Convert RGBA to RGB for JPEG compatibility
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
             img.thumbnail((400, 400))
             thumb_filename = f"{group.name}_v1_thumb.jpg"
             thumb_path = f"assets/thumbnails/{thumb_filename}"
@@ -405,7 +408,6 @@ def get_asset_detail(request, asset_id):
                 'type': asset.asset_group.asset_type,
                 'url': asset.web_version_path or asset.file_path,
                 'thumbnail': asset.thumbnail_path,
-                'description': asset.asset_group.description,
                 'tags': [{'tag': t.tag} for t in asset.asset_group.tags.all()],
                 'uploaded_at': asset.uploaded_at,
                 'created_at': asset.asset_group.created_at,
