@@ -488,4 +488,46 @@ def update_asset(request, asset_id):
     
     return Response({'success': True, 'message': 'Asset updated successfully'})
 
+# -----------------------------
+# ASSETS: MANAGE TAGS
+# -----------------------------
+@api_view(['POST', 'DELETE'])
+@authentication_classes([AuthTokenAuthentication])
+@permission_classes([IsEditorOrAdmin])
+def manage_asset_tags(request, asset_id):
+    try:
+        asset = Asset.objects.get(id=asset_id)
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=404)
+    
+    tags_data = request.data.get('tags', [])
+    if not tags_data:
+        return Response({'error': 'No tags provided'}, status=400)
+        
+    if isinstance(tags_data, str):
+        tags_data = [tags_data]
+        
+    from assets.models import AssetTag
+    
+    if request.method == 'POST':
+        # Add tags
+        created_tags = []
+        for tag_name in tags_data:
+            tag_name = tag_name.strip()
+            if tag_name:
+                tag, created = AssetTag.objects.get_or_create(
+                    asset_group=asset.asset_group,
+                    tag=tag_name
+                )
+                created_tags.append(tag.tag)
+        return Response({'success': True, 'tags': created_tags})
+        
+    elif request.method == 'DELETE':
+        # Remove tags
+        AssetTag.objects.filter(
+            asset_group=asset.asset_group,
+            tag__in=tags_data
+        ).delete()
+        return Response({'success': True, 'message': 'Tags removed'})
+
     

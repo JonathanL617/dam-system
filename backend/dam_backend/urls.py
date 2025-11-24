@@ -1,21 +1,7 @@
 """
 URL configuration for dam_backend project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-# dam_backend/urls.py
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
@@ -37,8 +23,9 @@ urlpatterns = [
     # Asset endpoints
     path('api/assets/', api_views.list_assets, name='list_assets'),
     path('api/assets/<int:asset_id>/', api_views.get_asset_detail, name='get_asset_detail'),
-    path('api/assets/<int:asset_id>/update/', api_views.update_asset, name='update-asset'),  # ← THIS WAS MISSING
-    path('api/assets/<int:asset_id>/delete/', api_views.delete_asset, name='delete-asset'),
+    path('api/assets/<int:asset_id>/update/', api_views.update_asset, name='update_asset'),
+    path('api/assets/<int:asset_id>/delete/', api_views.delete_asset, name='delete_asset'),
+    path('api/assets/<int:asset_id>/tags/', api_views.manage_asset_tags, name='manage_asset_tags'),
     path('api/assets/<int:group_id>/upload-version/', api_views.upload_asset_version, name='upload_asset_version'),
     path('api/assets/upload/', api_views.create_and_upload_asset, name='create_and_upload_asset'),
 ]
@@ -46,5 +33,3 @@ urlpatterns = [
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
-
