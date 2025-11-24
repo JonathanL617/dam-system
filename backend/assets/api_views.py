@@ -347,11 +347,20 @@ def create_and_upload_asset(request):
     filename = f"{group.name}_v1{ext}"
     path = default_storage.save(f"assets/{filename}", ContentFile(file.read()))
 
+    # Generate thumbnail and extract metadata
     thumbnail_path = ''
+    width = None
+    height = None
+    duration = None
+    metadata_json = {}
+
     try:
         if asset_type == 'image':
             # Generate image thumbnail
             img = Image.open(default_storage.path(path))
+            width, height = img.size
+            metadata_json = {'format': img.format, 'mode': img.mode}
+            
             # Convert RGBA to RGB for JPEG compatibility
             if img.mode == 'RGBA':
                 img = img.convert('RGB')
@@ -363,28 +372,42 @@ def create_and_upload_asset(request):
             thumbnail_path = f"/media/{thumb_path}"
         
         elif asset_type == 'video':
-            # Generate video thumbnail (first frame)
+            # Generate video thumbnail (first frame) & extract metadata
             video_path = default_storage.path(path)
             vidcap = cv2.VideoCapture(video_path)
-            success, image = vidcap.read()
-            if success:
-                thumb_filename = f"{group.name}_v1_thumb.jpg"
-                thumb_path = f"assets/thumbnails/{thumb_filename}"
-                os.makedirs(os.path.join(settings.MEDIA_ROOT, 'assets', 'thumbnails'), exist_ok=True)
-                cv2.imwrite(default_storage.path(thumb_path), image)
-                thumbnail_path = f"/media/{thumb_path}"
+            
+            if vidcap.isOpened():
+                width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                fps = vidcap.get(cv2.CAP_PROP_FPS)
+                frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+                duration = frame_count / fps if fps > 0 else 0
+                metadata_json = {'fps': fps, 'frame_count': frame_count}
+                
+                success, image = vidcap.read()
+                if success:
+                    thumb_filename = f"{group.name}_v1_thumb.jpg"
+                    thumb_path = f"assets/thumbnails/{thumb_filename}"
+                    os.makedirs(os.path.join(settings.MEDIA_ROOT, 'assets', 'thumbnails'), exist_ok=True)
+                    cv2.imwrite(default_storage.path(thumb_path), image)
+                    thumbnail_path = f"/media/{thumb_path}"
             vidcap.release()
+            
     except Exception as e:
-        print(f"Failed to generate thumbnail: {e}")
+        print(f"Failed to generate thumbnail/metadata: {e}")
     
     asset = Asset.objects.create(
         asset_group=group,
         version_number=1,
         filename=filename,
+        width=width,
+        height=height,
+        duration=duration,
+        metadata_json=metadata_json,
         file_path=f"/media/{path}",
         file_size=file.size,
         file_type=ext.replace('.', ''),
-        thumbnail_path=thumbnail_path,  # ← Add this line
+        thumbnail_path=thumbnail_path,
         uploaded_by=request.user.username,
         change_notes=change_notes
     )
@@ -415,6 +438,10 @@ def get_asset_detail(request, asset_id):
                 'file_size': asset.get_file_size_display(),
                 'version_number': asset.version_number,
                 'uploaded_by': asset.uploaded_by,
+                'width': asset.width,
+                'height': asset.height,
+                'duration': asset.duration,
+                'metadata': asset.metadata_json,
             })
     except Asset.DoesNotExist:
         return Response({'error': 'Asset not found'}, status=404)
