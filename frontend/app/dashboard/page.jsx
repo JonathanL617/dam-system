@@ -100,14 +100,14 @@ export default function Dashboard() {
       console.log('Assets list:', list);
       setAssets(list);
       setFilteredAssets(list);
-    } 
+    }
     catch (err) {
       console.error('Error fetching assets:', err);
       console.error('Error details:', err.message);
       // Set empty arrays so UI doesn't break
       setAssets([]);
       setFilteredAssets([]);
-    } 
+    }
     finally {
       setAssetsLoading(false);
     }
