@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack } from '@chakra-ui/react';
+import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HStack } from '@chakra-ui/react';
 import { Engine, Scene } from 'react-babylonjs';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { getAsset } from '../../../lib/api_client';
+import { getAsset, updateAsset, deleteAsset } from '../../../lib/api_client';
+
+
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -18,6 +21,9 @@ export default function AssetDetailPage() {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
+    const userRole = localStorage.getItem('role');
+    setRole(userRole);
+  }, []);
     const userRole = localStorage.getItem('role');
     setRole(userRole);
   }, []);
