@@ -6,6 +6,9 @@ import { Box, Heading, Text, Image, Spinner, Center, Button, VStack, Badge, HSta
 import { Engine, Scene } from 'react-babylonjs';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { getAsset, updateAsset, deleteAsset } from '../../../lib/api_client';
+import { ChevronDownIcon, DeleteIcon, EditIcon, AddIcon } from "@chakra-ui/icons";
+import { useRef } from "react";
+
 
 export default function AssetDetailPage() {
   const params = useParams();
